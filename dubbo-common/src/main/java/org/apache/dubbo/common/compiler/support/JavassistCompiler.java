@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 
 /**
  * JavassistCompiler. (SPI, Singleton, ThreadSafe)
+ *
+ *  Dubbo 动态编译默认实现类。
  */
 public class JavassistCompiler extends AbstractCompiler {
 

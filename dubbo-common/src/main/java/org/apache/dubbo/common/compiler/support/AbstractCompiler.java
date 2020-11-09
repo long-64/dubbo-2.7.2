@@ -30,6 +30,15 @@ public abstract class AbstractCompiler implements Compiler {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile("class\\s+([$_a-zA-Z][$_a-zA-Z0-9]*)\\s+");
 
+
+    /**
+     *
+     *  通过, 源文件动态编译为 Class 对象
+     *
+     * @param code        Java source code
+     * @param classLoader classloader
+     * @return
+     */
     @Override
     public Class<?> compile(String code, ClassLoader classLoader) {
         code = code.trim();
