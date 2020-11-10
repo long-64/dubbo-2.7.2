@@ -63,6 +63,10 @@ public class ChannelEventRunnable implements Runnable {
             switch (state) {
             case CONNECTED:
                 try {
+
+                    /**
+                     * {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler#connected(Channel)}
+                     */
                     handler.connected(channel);
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);

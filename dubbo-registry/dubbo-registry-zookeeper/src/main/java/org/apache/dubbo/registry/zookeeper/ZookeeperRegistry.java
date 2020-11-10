@@ -109,9 +109,17 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     * ZK 注册中心。最终调用 ZkClient 将服务注册到 Zookeeper。
+     * @param url
+     */
     @Override
     public void doRegister(URL url) {
         try {
+
+            /**
+             * [ZkClient] {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperClient#create(String, boolean)}
+             */
             zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);

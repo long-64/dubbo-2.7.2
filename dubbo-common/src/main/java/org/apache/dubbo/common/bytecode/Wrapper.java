@@ -34,6 +34,9 @@ import java.util.regex.Matcher;
 
 /**
  * Wrapper.
+ *
+ *  目的: 减少反射的调用，当服务提供方收到消费方发来的请求后，需要根据消费者传递过来的方法名、参数反射调用服务提供者的实现类。
+ *      而反射本身有性能开销。
  */
 public abstract class Wrapper {
     private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map

@@ -39,6 +39,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.ApplicationListener;
@@ -111,6 +112,10 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             if (logger.isInfoEnabled()) {
                 logger.info("The service ready on spring started. service: " + getInterface());
             }
+
+            /**
+             * 监听 Spring 容器刷新事件，从而进入启动流程 {@link #export()}
+             */
             export();
         }
     }
@@ -333,8 +338,16 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
      */
     @Override
     public void export() {
+
+        /**
+         * 调用父类 {@link ServiceConfig#export()}
+         */
         super.export();
         // Publish ServiceBeanExportedEvent
+
+        /**
+         * 推送 事件 {@link #publishExportEvent()}
+         */
         publishExportEvent();
     }
 
@@ -343,6 +356,10 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
      */
     private void publishExportEvent() {
         ServiceBeanExportedEvent exportEvent = new ServiceBeanExportedEvent(this);
+
+        /**
+         *  发布事件 ，对应的监听 {@link org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor#onApplicationEvent(ApplicationEvent)}
+         */
         applicationEventPublisher.publishEvent(exportEvent);
     }
 

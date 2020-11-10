@@ -40,7 +40,8 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
         // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'
 
         /**
-         * Wrapper 生成 {@link Wrapper#getWrapper(Class)}
+         *  把服务实现类转换为 Wrapper {@link Wrapper#getWrapper(Class)}
+         *   减少反射的调用。
          */
         final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
         return new AbstractProxyInvoker<T>(proxy, type, url) {

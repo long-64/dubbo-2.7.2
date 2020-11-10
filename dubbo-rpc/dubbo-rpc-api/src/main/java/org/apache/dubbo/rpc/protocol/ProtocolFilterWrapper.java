@@ -117,8 +117,17 @@ public class ProtocolFilterWrapper implements Protocol {
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+
+            /**
+             *   {@link org.apache.dubbo.registry.integration.RegistryProtocol#export(Invoker)}
+             */
             return protocol.export(invoker);
         }
+
+        /**
+         *   创建Filter 链 {@link #buildInvokerChain(Invoker, String, String)}
+         *   dubboProtocal {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
+         */
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 

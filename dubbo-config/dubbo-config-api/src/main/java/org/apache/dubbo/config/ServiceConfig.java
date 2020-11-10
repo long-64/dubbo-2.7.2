@@ -365,16 +365,35 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         return getProtocols().size() == 1 && LOCAL_PROTOCOL.equalsIgnoreCase(getProtocols().get(0).getName());
     }
 
+    /**
+     * 服务提供方启动流程入口 【TODO 】
+     *
+     *  激活发布服务。
+     */
     public synchronized void export() {
         checkAndUpdateSubConfigs();
 
+        /**
+         * 是否需要导出服务 {@link #shouldExport()}
+         */
         if (!shouldExport()) {
             return;
         }
 
+        /**
+         * 延迟发布 {@link #shouldDelay()}
+         */
         if (shouldDelay()) {
+
+            /**
+             * 使用 `ScheduledExecutorService`
+             */
             delayExportExecutor.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
+
+            /**
+             * 直接发布 {@link #doExport()}
+             */
             doExport();
         }
     }
@@ -391,6 +410,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     private boolean shouldDelay() {
+
+        // "getDelay"
         Integer delay = getDelay();
         return delay != null && delay > 0;
     }
@@ -400,6 +421,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         return (delay == null && provider != null) ? provider.getDelay() : delay;
     }
 
+    /**
+     * 直接发布
+     */
     protected synchronized void doExport() {
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
@@ -412,6 +436,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
+
+        /**
+         * 根据 ServiceConfig 里的属性进行合法性检查 {@link #doExportUrls()}
+         */
         doExportUrls();
     }
 
@@ -449,15 +477,30 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
+
+        /**
+         * 加载所有注册中心对象 {@link #loadRegistries(boolean)}
+         */
         List<URL> registryURLs = loadRegistries(true);
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
             ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
             ApplicationModel.initProviderModel(pathKey, providerModel);
+
+            /**
+             * {@link #doExportUrlsFor1Protocol(ProtocolConfig, List)}
+             */
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
+    /**
+     *
+     *  内部把参数封装为 URL。
+     *
+     * @param protocolConfig
+     * @param registryURLs
+     */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
@@ -476,6 +519,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         appendParameters(map, provider);
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
+
+        // 1、解析 MethodConfig
         if (CollectionUtils.isNotEmpty(methods)) {
             for (MethodConfig method : methods) {
                 appendParameters(map, method, method.getName());
@@ -532,10 +577,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } // end of methods for
         }
 
+        // 如果为泛型调用，设置泛型类型。
         if (ProtocolUtils.isGeneric(generic)) {
             map.put(GENERIC_KEY, generic);
             map.put(METHODS_KEY, ANY_VALUE);
         } else {
+
+            // 正常调用设置拼接 URL 参数。
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
@@ -557,6 +605,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             }
         }
         // export service
+
+        // 拼接 URL 对象。
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
@@ -567,8 +617,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                     .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
 
+
+        // 导出服务、本地服务、远程服务
         String scope = url.getParameter(SCOPE_KEY);
         // don't export when none is configured
+
+        // 如果 scope 为 SCOPE_NODE 则不导出服务。
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
@@ -580,6 +634,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 if (!isOnlyInJvm() && logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                 }
+
+                // 如果有服务注册中心地址
                 if (CollectionUtils.isNotEmpty(registryURLs)) {
                     for (URL registryURL : registryURLs) {
                         //if protocol is only injvm ,not register
@@ -608,15 +664,29 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         exporters.add(exporter);
                     }
                 } else {
+
+                    /**
+                     * 直连方式。{@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
+                     */
                     Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
                     DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                    /**
+                     * 实际调用 protocol 适配器类 `Protocol$Adaptive` # export() {@link org.apache.dubbo.registry.integration.RegistryProtocol#export(Invoker)}
+                     *
+                     *  最终调用 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
+                     */
                     Exporter<?> exporter = protocol.export(wrapperInvoker);
                     exporters.add(exporter);
                 }
                 /**
                  * @since 2.7.0
                  * ServiceData Store
+                 *
+                 *  【 元数据存储 】
+                 *
+                 *  1、原来都保存到服务注册中心的元数据进行分类存储。注册中心将只用于存储关键服务信息。
+                 *  2、2.7.0 则使用更专业配置中心、Nacos、Apollo、Consul、Etcd.
                  */
                 MetadataReportService metadataReportService = null;
                 if ((metadataReportService = getMetadataReportService()) != null) {

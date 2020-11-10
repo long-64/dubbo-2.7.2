@@ -37,6 +37,8 @@ import static org.apache.dubbo.rpc.Constants.LOCAL_PROTOCOL;
 
 /**
  * InjvmProtocol
+ *
+ *  【 本地服务暴露 】
  */
 public class InjvmProtocol extends AbstractProtocol implements Protocol {
 

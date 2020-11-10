@@ -739,6 +739,10 @@ public class ExtensionLoader<T> {
 
         // 在指定目录的 Jar 里面查找扩展点。
         Map<String, Class<?>> extensionClasses = new HashMap<>();
+
+        /**
+         * {@link #loadDirectory(Map, String, String)}
+         */
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace("org.apache", "com.alibaba"));
         loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName());
@@ -787,6 +791,10 @@ public class ExtensionLoader<T> {
             if (urls != null) {
                 while (urls.hasMoreElements()) {
                     java.net.URL resourceURL = urls.nextElement();
+
+                    /**
+                     * {@link #loadResource(Map, ClassLoader, java.net.URL)}
+                     */
                     loadResource(extensionClasses, classLoader, resourceURL);
                 }
             }
@@ -815,6 +823,10 @@ public class ExtensionLoader<T> {
                                 line = line.substring(i + 1).trim();
                             }
                             if (line.length() > 0) {
+
+                                /**
+                                 * {@link #loadClass(Map, java.net.URL, Class, String)}
+                                 */
                                 loadClass(extensionClasses, resourceURL, Class.forName(line, true, classLoader), name);
                             }
                         } catch (Throwable t) {
@@ -831,16 +843,34 @@ public class ExtensionLoader<T> {
     }
 
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name) throws NoSuchMethodException {
+
+        // 类型不匹配抛出异常
         if (!type.isAssignableFrom(clazz)) {
             throw new IllegalStateException("Error occurred when loading extension class (interface: " +
                     type + ", class line: " + clazz.getName() + "), class "
                     + clazz.getName() + " is not subtype of interface.");
         }
+
+        // 如果是适配器类，则调用 `cacheAdaptiveClass` 来做缓存
         if (clazz.isAnnotationPresent(Adaptive.class)) {
+
+            /**
+             * {@link #cacheAdaptiveClass(Class)}
+             */
             cacheAdaptiveClass(clazz);
+
+            /**
+             * 如果是 Wrapper 类 {@link #isWrapperClass(Class)}
+             */
         } else if (isWrapperClass(clazz)) {
+
+            /**
+             * {@link #cacheWrapperClass(Class)}
+             */
             cacheWrapperClass(clazz);
         } else {
+
+            // 剩余的则是扩展点的扩展实现类。
             clazz.getConstructor();
             if (StringUtils.isEmpty(name)) {
                 name = findAnnotationName(clazz);
@@ -928,9 +958,13 @@ public class ExtensionLoader<T> {
      * test if clazz is a wrapper class
      * <p>
      * which has Constructor with given class type as its only argument
+     *
+     *  如果 clazz 的构造函数参数 type 类型，则说明是 Wrapper 类。
      */
     private boolean isWrapperClass(Class<?> clazz) {
         try {
+
+            // 判断 SPI 实现类 clazz 是否有参数类型为 type 的构造函数。
             clazz.getConstructor(type);
             return true;
         } catch (NoSuchMethodException e) {

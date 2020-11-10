@@ -123,6 +123,10 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
+
+        /**
+         * {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#connected(Channel)}
+         */
         handler.connected(ch);
     }
 

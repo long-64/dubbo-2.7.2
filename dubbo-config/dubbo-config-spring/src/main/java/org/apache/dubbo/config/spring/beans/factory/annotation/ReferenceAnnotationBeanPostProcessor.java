@@ -223,7 +223,13 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
+
+        // 处理 `ServiceBeanExportedEvent` 事件
         if (event instanceof ServiceBeanExportedEvent) {
+
+            /**
+             * {@link 事件处理 {@link #onServiceBeanExportEvent(ServiceBeanExportedEvent)}
+             */
             onServiceBeanExportEvent((ServiceBeanExportedEvent) event);
         } else if (event instanceof ContextRefreshedEvent) {
             onContextRefreshedEvent((ContextRefreshedEvent) event);

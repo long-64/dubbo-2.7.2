@@ -53,6 +53,13 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+
+        /**
+         *  都是创建 `NettyServer` 默认走 `Netty-4`
+         *
+         *  Netty-4 {@link org.apache.dubbo.remoting.transport.netty4.NettyTransporter#bind(URL, ChannelHandler)}
+         *  Netty-3 {@link org.apache.dubbo.remoting.transport.netty.NettyTransporter#bind(URL, ChannelHandler)}
+         */
         return getTransporter().bind(url, handler);
     }
 

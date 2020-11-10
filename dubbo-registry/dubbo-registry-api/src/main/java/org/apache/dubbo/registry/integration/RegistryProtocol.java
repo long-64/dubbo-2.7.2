@@ -107,6 +107,8 @@ import static org.apache.dubbo.common.utils.UrlUtils.classifyUrls;
 
 /**
  * RegistryProtocol
+ *
+ *   【 Registry 】
  */
 public class RegistryProtocol implements Protocol {
     public static final String[] DEFAULT_REGISTER_PROVIDER_KEYS = {
@@ -182,6 +184,11 @@ public class RegistryProtocol implements Protocol {
 
     public void register(URL registryUrl, URL registeredProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
+
+        /**
+         * 通过工厂获取 registry
+         *  ZK 注册中心 {@link org.apache.dubbo.registry.zookeeper.ZookeeperRegistry#doRegister(URL)}
+         */
         registry.register(registeredProviderUrl);
     }
 
@@ -206,9 +213,17 @@ public class RegistryProtocol implements Protocol {
 
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
         //export invoker
+
+        /**
+         *  启动 nettyServer 进行服务监听 {@link #doLocalExport(Invoker, URL)}
+         */
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
         // url to registry
+
+        /**
+         * 获取服务注册中心和注册服务 {@link #getRegistry(Invoker)}
+         */
         final Registry registry = getRegistry(originInvoker);
         final URL registeredProviderUrl = getRegisteredProviderUrl(providerUrl, registryUrl);
         ProviderInvokerWrapper<T> providerInvokerWrapper = ProviderConsumerRegTable.registerProvider(originInvoker,
@@ -216,6 +231,10 @@ public class RegistryProtocol implements Protocol {
         //to judge if we need to delay publish
         boolean register = registeredProviderUrl.getParameter("register", true);
         if (register) {
+
+            /**
+             * 注册 {@link #register(URL, URL)}
+             */
             register(registryUrl, registeredProviderUrl);
             providerInvokerWrapper.setReg(true);
         }
@@ -242,6 +261,10 @@ public class RegistryProtocol implements Protocol {
 
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
+
+            /**
+             * {@link org.apache.dubbo.qos.protocol.QosProtocolWrapper#export(Invoker)}
+             */
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
     }
@@ -295,6 +318,10 @@ public class RegistryProtocol implements Protocol {
      */
     private Registry getRegistry(final Invoker<?> originInvoker) {
         URL registryUrl = getRegistryUrl(originInvoker);
+
+        /**
+         * {@link org.apache.dubbo.registry.support.AbstractRegistryFactory#getRegistry(URL)}
+         */
         return registryFactory.getRegistry(registryUrl);
     }
 

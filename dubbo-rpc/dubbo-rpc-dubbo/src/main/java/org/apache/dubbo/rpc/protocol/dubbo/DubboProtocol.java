@@ -165,6 +165,10 @@ public class DubboProtocol extends AbstractProtocol {
 
         @Override
         public void connected(Channel channel) throws RemotingException {
+
+            /**
+             * 核心实现 调用 {@link #invoke(Channel, String)}
+             */
             invoke(channel, ON_CONNECT_KEY);
         }
 
@@ -177,9 +181,15 @@ public class DubboProtocol extends AbstractProtocol {
         }
 
         private void invoke(Channel channel, String methodKey) {
+
+            // 创建 `Invocation` 对象，
             Invocation invocation = createInvocation(channel, channel.getUrl(), methodKey);
             if (invocation != null) {
                 try {
+
+                    /**
+                     * {@link #received(Channel, Object)}
+                     */
                     received(channel, invocation);
                 } catch (Throwable t) {
                     logger.warn("Failed to invoke event method " + invocation.getMethodName() + "(), cause: " + t.getMessage(), t);
@@ -311,6 +321,9 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
+        /**
+         * 同一机器的不同服务导出只会开启一个 NettyServer {@link #openServer(URL)}
+         */
         openServer(url);
         optimizeSerialization(url);
 
@@ -319,8 +332,12 @@ public class DubboProtocol extends AbstractProtocol {
 
     private void openServer(URL url) {
         // find server.
+
+        // 提供者机器的地址 ip:port
         String key = url.getAddress();
         //client can export a service which's only for server to invoke
+
+        // 只有服务提供端才会启动监听
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
         if (isServer) {
             ExchangeServer server = serverMap.get(key);
@@ -328,6 +345,10 @@ public class DubboProtocol extends AbstractProtocol {
                 synchronized (this) {
                     server = serverMap.get(key);
                     if (server == null) {
+
+                        /**
+                         * 【核心】{@link #createServer(URL)}
+                         */
                         serverMap.put(key, createServer(url));
                     }
                 }
@@ -354,6 +375,10 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeServer server;
         try {
+
+            /**
+             *  {@link Exchangers#bind(URL, ExchangeHandler)}
+             */
             server = Exchangers.bind(url, requestHandler);
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);

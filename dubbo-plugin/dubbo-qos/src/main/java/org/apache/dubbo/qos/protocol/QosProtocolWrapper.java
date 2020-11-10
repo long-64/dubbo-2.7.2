@@ -60,6 +60,10 @@ public class QosProtocolWrapper implements Protocol {
             startQosServer(invoker.getUrl());
             return protocol.export(invoker);
         }
+
+        /**
+         *  {@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper#export(Invoker)}
+         */
         return protocol.export(invoker);
     }
 

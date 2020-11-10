@@ -67,6 +67,12 @@ public class Exchangers {
             throw new IllegalArgumentException("handler == null");
         }
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+
+        /**
+         *  获取 `Exchanger` 增强实现类 "HeaderExchanger" {@link #getExchanger(URL)}
+         *
+         *   {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchanger#bind(URL, ExchangeHandler)}
+         */
         return getExchanger(url).bind(url, handler);
     }
 
