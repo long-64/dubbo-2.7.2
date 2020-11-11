@@ -79,6 +79,10 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+
+        /**
+         *  创建 NettyClient 对象 {@link org.apache.dubbo.remoting.transport.netty4.NettyTransporter#connect(URL, ChannelHandler)}
+         */
         return getTransporter().connect(url, handler);
     }
 

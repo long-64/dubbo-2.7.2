@@ -188,6 +188,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }
                 }
+
+                /**
+                 * 最终调用 {@link org.apache.dubbo.registry.integration.RegistryDirectory#notify(List)}
+                 */
                 notify(url, listener, urls);
             }
         } catch (Throwable e) {

@@ -72,15 +72,26 @@ public class MockClusterInvoker<T> implements Invoker<T> {
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;
 
+        // 查看 URL 里面是否包含 mock 字段
         String value = directory.getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
+
+        // 如果没有，或者值为 默认的 false，则说明没有设置降级策略。
         if (value.length() == 0 || value.equalsIgnoreCase("false")) {
             //no mock
+
+            // 正常发起远程调用
             result = this.invoker.invoke(invocation);
+
+            // 设置 force:result 降级策略
         } else if (value.startsWith("force")) {
             if (logger.isWarnEnabled()) {
                 logger.warn("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + directory.getUrl());
             }
             //force:direct mock
+
+            /**
+             * {@link #doMockInvoke(Invocation, RpcException)}
+             */
             result = doMockInvoke(invocation, null);
         } else {
             //fail-mock
@@ -112,6 +123,10 @@ public class MockClusterInvoker<T> implements Invoker<T> {
             minvoker = mockInvokers.get(0);
         }
         try {
+
+            /**
+             *  {@link org.apache.dubbo.rpc.support.MockInvoker#invoke(Invocation)}
+             */
             result = minvoker.invoke(invocation);
         } catch (RpcException me) {
             if (me.isBiz()) {

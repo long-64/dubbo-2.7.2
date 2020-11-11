@@ -99,10 +99,16 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
+
+            /**
+             *  {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler} `reply`
+             */
             CompletionStage<Object> future = handler.reply(channel, msg);
             future.whenComplete((appResult, t) -> {
                 try {
                     if (t == null) {
+
+                        // 如果请求已经完成、则设置结果并写回
                         res.setStatus(Response.OK);
                         res.setResult(appResult);
                     } else {
@@ -187,18 +193,32 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
+
+            // 请求
             if (message instanceof Request) {
                 // handle request.
+
+                // 处理请求
                 Request request = (Request) message;
                 if (request.isEvent()) {
                     handlerEvent(channel, request);
                 } else {
+
+                    // 需要返回值 req-res, twoway
                     if (request.isTwoWay()) {
+
+                        /**
+                         * 需要由返回值 {@link #handleRequest(ExchangeChannel, Request)}
+                         */
                         handleRequest(exchangeChannel, request);
                     } else {
+
+                        // 不需要返回值的请求，req, oneway
                         handler.received(exchangeChannel, request.getData());
                     }
                 }
+
+                // 响应
             } else if (message instanceof Response) {
                 handleResponse(channel, (Response) message);
             } else if (message instanceof String) {

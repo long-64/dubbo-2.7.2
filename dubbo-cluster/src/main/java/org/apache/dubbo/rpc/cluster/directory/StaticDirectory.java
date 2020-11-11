@@ -30,6 +30,8 @@ import java.util.List;
 
 /**
  * StaticDirectory
+ *
+ *  消费端使用了多个注册中心，其把所有服务注册中心的 Invoker 列表汇集到一个 Invoker 列表中。
  */
 public class StaticDirectory<T> extends AbstractDirectory<T> {
     private static final Logger logger = LoggerFactory.getLogger(StaticDirectory.class);

@@ -40,6 +40,7 @@ import org.apache.dubbo.rpc.ProxyFactory;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Configurator;
+import org.apache.dubbo.rpc.cluster.Directory;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.protocol.InvokerWrapper;
 
@@ -109,6 +110,8 @@ import static org.apache.dubbo.common.utils.UrlUtils.classifyUrls;
  * RegistryProtocol
  *
  *   【 Registry 】
+ *
+ *   RegistryProtocol 被 QosProtocolWrapper、ProtocolFilterWrapper、ProtocolListenerWrapper 三个 Wrapper 类增强。
  */
 public class RegistryProtocol implements Protocol {
     public static final String[] DEFAULT_REGISTER_PROVIDER_KEYS = {
@@ -413,6 +416,10 @@ public class RegistryProtocol implements Protocol {
         String group = qs.get(GROUP_KEY);
         if (group != null && group.length() > 0) {
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
+
+                /**
+                 *  内部调用 {@link #doRefer(Cluster, Registry, Class, URL)}
+                 */
                 return doRefer(getMergeableCluster(), registry, type, url);
             }
         }
@@ -434,10 +441,19 @@ public class RegistryProtocol implements Protocol {
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
             registry.register(directory.getRegisteredConsumerUrl());
         }
+
+        // 建立路由规则链
         directory.buildRouterChain(subscribeUrl);
+
+        /**
+         * 向服务注册中心订阅服务提供者的服务 {@link RegistryDirectory#subscribe(URL)}
+         */
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
+        /**
+         *  使用集群容错扩展将 Dubbo 协议的 Invoker 客户端转换为需要的接口 {@link org.apache.dubbo.rpc.cluster.support.FailoverCluster#join(Directory)}
+         */
         Invoker invoker = cluster.join(directory);
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;

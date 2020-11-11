@@ -28,6 +28,7 @@ import org.apache.dubbo.common.utils.ConfigUtils;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.remoting.Channel;
+import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.Transporter;
 import org.apache.dubbo.remoting.exchange.ExchangeChannel;
@@ -114,6 +115,16 @@ public class DubboProtocol extends AbstractProtocol {
 
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
+        /**
+         *
+         *  received 委托给 `reply` 方法来执行。
+         *      如果执行结果已经完成，则直接将结果写回消费端。否则使用异步回调方式（避免当前线程被阻塞）等执行完毕并拿到结果再把结果写回消费端。
+         *
+         * @param channel
+         * @param message
+         * @return
+         * @throws RemotingException
+         */
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
 
@@ -124,6 +135,10 @@ public class DubboProtocol extends AbstractProtocol {
             }
 
             Invocation inv = (Invocation) message;
+
+            /**
+             * 调用对应 Invoker
+             */
             Invoker<?> invoker = getInvoker(channel, inv);
             // need to consider backward-compatibility if it's a callback
             if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
@@ -149,16 +164,32 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
+
+            /**
+             * 执行 Invoker 调用链
+             */
             Result result = invoker.invoke(inv);
             return result.completionFuture().thenApply(Function.identity());
         }
 
+        /**
+         *
+         *  received 事件被传递到线程池后进行异步处理。
+         *
+         * @param channel
+         * @param message
+         * @throws RemotingException
+         */
         @Override
         public void received(Channel channel, Object message) throws RemotingException {
             if (message instanceof Invocation) {
                 reply((ExchangeChannel) channel, message);
 
             } else {
+
+                /**
+                 *  线程池任务被激活后调用 {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler#received(Channel, Object)}
+                 */
                 super.received(channel, message);
             }
         }
@@ -182,7 +213,9 @@ public class DubboProtocol extends AbstractProtocol {
 
         private void invoke(Channel channel, String methodKey) {
 
-            // 创建 `Invocation` 对象，
+            /**
+             * 创建 `Invocation` 对象，{@link #createInvocation(Channel, URL, String)}
+             */
             Invocation invocation = createInvocation(channel, channel.getUrl(), methodKey);
             if (invocation != null) {
                 try {
@@ -198,11 +231,14 @@ public class DubboProtocol extends AbstractProtocol {
         }
 
         private Invocation createInvocation(Channel channel, URL url, String methodKey) {
+
+            // URL 中不包含 key 直接返回
             String method = url.getParameter(methodKey);
             if (method == null || method.length() == 0) {
                 return null;
             }
 
+            // 根据 method 创建 RpcInvocation.
             RpcInvocation invocation = new RpcInvocation(method, new Class<?>[0], new Object[0]);
             invocation.setAttachment(PATH_KEY, url.getPath());
             invocation.setAttachment(GROUP_KEY, url.getParameter(GROUP_KEY));
@@ -437,20 +473,37 @@ public class DubboProtocol extends AbstractProtocol {
         optimizeSerialization(url);
 
         // create rpc invoker.
+        /**
+         *  {@link #getClients(URL)}  方法创建服务消费端 NettyClient 对象。
+         */
         DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
         invokers.add(invoker);
 
         return invoker;
     }
 
+    /**
+     *  注意三点
+     *  1、由于同一服务提供者可以提供多个服务，那么消费者机器需要与同一个服务提供者机器提供的多个服务共享链接。还是与每个服务都建立一个连接。
+     *  2、消费端启动时就与服务提供者机器建立好连接？
+     *      1、服务是否是惰性连接 `lazy`, false: 是及时连接。
+     *  3、每个服务消费端与服务提供者集群中的所有集群都有连接？
+     *
+     *
+     * @param url
+     * @return
+     */
     private ExchangeClient[] getClients(URL url) {
         // whether to share connection
 
+        // 不同服务是否共享链接
         boolean useShareConnect = false;
 
         int connections = url.getParameter(CONNECTIONS_KEY, 0);
         List<ReferenceCountExchangeClient> shareClients = null;
         // if not configured, connection is shared, otherwise, one connection for one service
+
+        // 如果没有配置，则默认链接是共享的，否则每个服务单独有自己的链接。
         if (connections == 0) {
             useShareConnect = true;
 
@@ -460,15 +513,26 @@ public class DubboProtocol extends AbstractProtocol {
             String shareConnectionsStr = url.getParameter(SHARE_CONNECTIONS_KEY, (String) null);
             connections = Integer.parseInt(StringUtils.isBlank(shareConnectionsStr) ? ConfigUtils.getProperty(SHARE_CONNECTIONS_KEY,
                     DEFAULT_SHARE_CONNECTIONS) : shareConnectionsStr);
+
+            /**
+             * 获取共享 NettyClient {@link #getSharedClient(URL, int)}
+             */
             shareClients = getSharedClient(url, connections);
         }
 
+        // 初始化 Client
         ExchangeClient[] clients = new ExchangeClient[connections];
         for (int i = 0; i < clients.length; i++) {
+            // 共享则返回已经存在
             if (useShareConnect) {
                 clients[i] = shareClients.get(i);
 
             } else {
+
+                /**
+                 *  创建新的 {@link #initClient(URL)}
+                 *  最终调用 {@link org.apache.dubbo.remoting.transport.netty4.NettyClient#NettyClient(URL, ChannelHandler)}
+                 */
                 clients[i] = initClient(url);
             }
         }
@@ -621,10 +685,16 @@ public class DubboProtocol extends AbstractProtocol {
         ExchangeClient client;
         try {
             // connection should be lazy
+
+            // 惰性连接
             if (url.getParameter(LAZY_CONNECT_KEY, false)) {
                 client = new LazyConnectExchangeClient(url, requestHandler);
 
             } else {
+
+                /**
+                 *  及时连接 {@link Exchangers#connect(String, ExchangeHandler)}
+                 */
                 client = Exchangers.connect(url, requestHandler);
             }
 

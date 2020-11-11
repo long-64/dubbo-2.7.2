@@ -26,6 +26,7 @@ import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.transport.AbstractClient;
+import org.apache.dubbo.remoting.transport.AbstractEndpoint;
 import org.apache.dubbo.remoting.utils.UrlUtils;
 
 import io.netty.bootstrap.Bootstrap;
@@ -64,12 +65,21 @@ public class NettyClient extends AbstractClient {
     private volatile Channel channel; // volatile, please copy reference to use
 
     public NettyClient(final URL url, final ChannelHandler handler) throws RemotingException {
+
+        /**
+         * 加载线程池模型 {@link #wrapChannelHandler(URL, ChannelHandler)}
+         *  `super` {@link AbstractClient#AbstractClient(URL, ChannelHandler)}
+         */
         super(url, wrapChannelHandler(url, handler));
     }
 
     @Override
     protected void doOpen() throws Throwable {
+
+        // 创建业务 handler
         final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
+
+        // 创建启动器并配置
         bootstrap = new Bootstrap();
         bootstrap.group(nioEventLoopGroup)
                 .option(ChannelOption.SO_KEEPALIVE, true)
@@ -84,16 +94,25 @@ public class NettyClient extends AbstractClient {
             bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getConnectTimeout());
         }
 
+        // 添加 Handler 到 链接的管道
         bootstrap.handler(new ChannelInitializer() {
 
             @Override
             protected void initChannel(Channel ch) throws Exception {
                 int heartbeatInterval = UrlUtils.getHeartbeat(getUrl());
+
+                /**
+                 *  获取编解码器 {@link AbstractEndpoint#getCodec()}
+                 *  `NettyCodecAdapter` 适配器，把编解码设置到链接 Channel 的管线中。
+                 */
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
                 ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
                         .addLast("decoder", adapter.getDecoder())
                         .addLast("encoder", adapter.getEncoder())
+
+                        // 心跳加检查
                         .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
+                        // 内部使用
                         .addLast("handler", nettyClientHandler);
                 String socksProxyHost = ConfigUtils.getProperty(SOCKS_PROXY_HOST);
                 if(socksProxyHost != null) {
@@ -105,9 +124,15 @@ public class NettyClient extends AbstractClient {
         });
     }
 
+    /**
+     * 服务提供者建立 TCP 链接。
+     * @throws Throwable
+     */
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
+
+        // 发起连接。
         ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
             boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);

@@ -95,6 +95,8 @@ final public class MockInvoker<T> implements Invoker<T> {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+
+        // mock 类型
         String mock = getUrl().getParameter(invocation.getMethodName() + "." + MOCK_KEY);
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(this);
@@ -106,7 +108,11 @@ final public class MockInvoker<T> implements Invoker<T> {
         if (StringUtils.isBlank(mock)) {
             throw new RpcException(new IllegalAccessException("mock can not be null. url :" + url));
         }
+
+        // 格式化类型
         mock = normalizeMock(URL.decode(mock));
+
+        // 根据不同类型，返回 mock 值
         if (mock.startsWith(RETURN_PREFIX)) {
             mock = mock.substring(RETURN_PREFIX.length()).trim();
             try {
@@ -127,6 +133,10 @@ final public class MockInvoker<T> implements Invoker<T> {
             }
         } else { //impl mock
             try {
+
+                /**
+                 *  {@link #getInvoker(String)}
+                 */
                 Invoker<T> invoker = getInvoker(mock);
                 return invoker.invoke(invocation);
             } catch (Throwable t) {
@@ -158,11 +168,14 @@ final public class MockInvoker<T> implements Invoker<T> {
 
     @SuppressWarnings("unchecked")
     private Invoker<T> getInvoker(String mockService) {
+
+        // 缓存存在返回。
         Invoker<T> invoker = (Invoker<T>) mocks.get(mockService);
         if (invoker != null) {
             return invoker;
         }
 
+        // 不存在则创建代理、并缓存。
         Class<T> serviceType = (Class<T>) ReflectUtils.forName(url.getServiceInterface());
         T mockObject = (T) getMockObject(mockService, serviceType);
         invoker = proxyFactory.getInvoker(mockObject, serviceType, url);
@@ -172,18 +185,28 @@ final public class MockInvoker<T> implements Invoker<T> {
         return invoker;
     }
 
+    /**
+     * 检查 mock 接口的实现类是否符合规则
+     * @param mockService
+     * @param serviceType
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public static Object getMockObject(String mockService, Class serviceType) {
+
+        // 如果 mock 类型，为 true，或者 default。
         if (ConfigUtils.isDefault(mockService)) {
             mockService = serviceType.getName() + "Mock";
         }
 
+        // 反射加载字节码创建 class对象。
         Class<?> mockClass = ReflectUtils.forName(mockService);
         if (!serviceType.isAssignableFrom(mockClass)) {
             throw new IllegalStateException("The mock class " + mockClass.getName() +
                     " not implement interface " + serviceType.getName());
         }
 
+        // 创建实例。
         try {
             return mockClass.newInstance();
         } catch (InstantiationException e) {

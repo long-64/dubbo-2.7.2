@@ -152,6 +152,10 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
         try {
+
+            /**
+             *  调用子类方法 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboInvoker#doInvoke(Invocation)}
+             */
             return doInvoke(invocation);
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();

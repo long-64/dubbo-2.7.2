@@ -240,6 +240,12 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         checkMetadataReport();
     }
 
+    /**
+     * 服务消费方，入口
+     * 方法返回，一个代理类，并且方法拦截器为
+     *      {@link org.apache.dubbo.rpc.proxy.InvokerInvocationHandler}
+     * @return
+     */
     public synchronized T get() {
         checkAndUpdateSubConfigs();
 
@@ -247,6 +253,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
         }
         if (ref == null) {
+
+            /**
+             *  初始化 {@link #init()}
+             */
             init();
         }
         return ref;
@@ -274,6 +284,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             return;
         }
         checkStubAndLocal(interfaceClass);
+
+        /**
+         * 检查 Mock 是否正确 {@link #checkMock(Class)}
+         */
         checkMock(interfaceClass);
         Map<String, String> map = new HashMap<String, String>();
 
@@ -324,8 +338,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         } else if (isInvalidLocalHost(hostToRegistry)) {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
+
+        // 注册IP
         map.put(REGISTER_IP_KEY, hostToRegistry);
 
+        /**
+         * 创建代理 {@link #createProxy(Map)}
+         */
         ref = createProxy(map);
 
         String serviceKey = URL.buildKey(interfaceName, group, version);
@@ -349,14 +368,26 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
+
+        /**
+         * 是否需要打开本地引用。{@link #shouldJvmRefer(Map)}
+         */
         if (shouldJvmRefer(map)) {
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
+
+            /**
+             * 创建 JVM 协议的本地引用
+             *  {@link org.apache.dubbo.rpc.protocol.AbstractProtocol#refer(Class, URL)}
+             *  最终实现类是  {@link InjvmProtocol#protocolBindingRefer(Class, URL)}
+             */
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }
         } else {
             urls.clear(); // reference retry init will add url to urls, lead to OOM
+
+            // 用户是否制定服务提供地址，可以是服务提供方IP 地址（直连方式）
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
                 if (us != null && us.length > 0) {
@@ -374,6 +405,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 }
             } else { // assemble URL from register center's configuration
                 // if protocols not injvm checkRegistry
+
+                // 根据服务注册中心装配 URL 对象。
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())){
                     checkRegistry();
                     List<URL> us = loadRegistries(false);
@@ -392,7 +425,12 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 }
             }
 
+            // 只有一个服务中心，时候
             if (urls.size() == 1) {
+
+                /**
+                 *  实际上调用 Protocol$Adaptive # refer 最终调用 {@link org.apache.dubbo.registry.integration.RegistryProtocol#refer(Class, URL)}
+                 */
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
@@ -414,6 +452,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             }
         }
 
+        // 是否应该在启动时候检查提供方是否可用。
         if (shouldCheck() && !invoker.isAvailable()) {
             throw new IllegalStateException("Failed to check the status of the service " + interfaceName + ". No provider available for the service " + (group == null ? "" : group + "/") + interfaceName + (version == null ? "" : ":" + version) + " from the url " + invoker.getUrl() + " to the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion());
         }
@@ -430,6 +469,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             metadataReportService.publishConsumer(consumerURL);
         }
         // create service proxy
+
+        // 创建服务代理。
         return (T) PROXY_FACTORY.getProxy(invoker);
     }
 

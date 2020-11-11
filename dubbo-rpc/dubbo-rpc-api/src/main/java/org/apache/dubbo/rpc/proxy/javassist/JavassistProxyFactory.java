@@ -44,6 +44,10 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
          *   减少反射的调用。
          */
         final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+
+        /**
+         * AbstractProxyInvoker 委托 Wrapper 类执行具体逻辑。
+         */
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override
             protected Object doInvoke(T proxy, String methodName,

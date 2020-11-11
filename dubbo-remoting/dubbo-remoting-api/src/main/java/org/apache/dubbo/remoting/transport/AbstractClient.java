@@ -57,6 +57,10 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
 
         try {
+
+            /**
+             *  调用子类方法 {@link org.apache.dubbo.remoting.transport.netty4.NettyClient#doOpen()}
+             */
             doOpen();
         } catch (Throwable t) {
             close();
@@ -65,7 +69,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                             + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
         try {
-            // connect.
+            /**
+             *  发起远端连接 {@link #connect()}
+             */
             connect();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());
@@ -91,9 +97,14 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                 .getDefaultExtension().remove(CONSUMER_SIDE, Integer.toString(url.getPort()));
     }
 
+    // 加载线程池模型。
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
         url = url.addParameterIfAbsent(THREADPOOL_KEY, DEFAULT_CLIENT_THREADPOOL);
+
+        /**
+         * Dubbo 内部的线程池模型 {@link ChannelHandlers#wrap(ChannelHandler, URL)}
+         */
         return ChannelHandlers.wrap(handler, url);
     }
 
@@ -187,6 +198,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                 return;
             }
 
+            /**
+             * 调用子类方法 {@link org.apache.dubbo.remoting.transport.netty4.NettyClient#doConnect()}
+             */
             doConnect();
 
             if (!isConnected()) {
