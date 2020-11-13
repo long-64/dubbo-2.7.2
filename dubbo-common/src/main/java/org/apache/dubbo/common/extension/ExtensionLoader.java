@@ -94,6 +94,10 @@ public class ExtensionLoader<T> {
 
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
+
+    /**
+     * 缓存适配器实例。
+     */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
     private volatile Class<?> cachedAdaptiveClass = null;
     private String cachedDefaultName;
@@ -105,6 +109,11 @@ public class ExtensionLoader<T> {
 
     private ExtensionLoader(Class<?> type) {
         this.type = type;
+
+        /**
+         *  根据 Class 获取 `ExtensionLoader`  {@link #getExtensionLoader(Class)}
+         *  获取当前扩展接口对应的适配器对象。 {@link #getAdaptiveExtension()}
+         */
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
@@ -368,6 +377,8 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("unchecked")
     public T getExtension(String name) {
+
+        // 扩展实现名称是否合法。
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Extension name == null");
         }
@@ -410,6 +421,10 @@ public class ExtensionLoader<T> {
         if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) {
             return null;
         }
+
+        /**
+         * 【 getExtension】{@link #getExtension(String)}
+         */
         return getExtension(cachedDefaultName);
     }
 
@@ -518,7 +533,7 @@ public class ExtensionLoader<T> {
 
     /**
      *  {@link #getExtensionLoader(Class)} -> `getAdaptiveExtension`
-     *   获取对应适配器类。
+     *   获取当前扩展接口对应的适配器对象。
      *
      * @return
      */
@@ -741,7 +756,7 @@ public class ExtensionLoader<T> {
         Map<String, Class<?>> extensionClasses = new HashMap<>();
 
         /**
-         * {@link #loadDirectory(Map, String, String)}
+         *   {@link #loadDirectory(Map, String, String)}
          */
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace("org.apache", "com.alibaba"));
@@ -778,6 +793,14 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     *
+     *  加载指定目录，具体扩展实现类。
+     *
+     * @param extensionClasses
+     * @param dir
+     * @param type
+     */
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir, String type) {
         String fileName = dir + type;
         try {
@@ -995,7 +1018,7 @@ public class ExtensionLoader<T> {
 
             /**
              *   注入适配器依赖的其他扩展点 {@link #injectExtension(Object)}
-             *   {@link #getAdaptiveExtensionClass() }
+             *     由源文件动态编译成 class 对象。 {@link #getAdaptiveExtensionClass() }
              *   使用 `newInstance()` 生成扩展接口对应适配器类的实例。
              */
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
@@ -1005,7 +1028,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 获取 SPI 所有扩展的Class对象
+     * 动态生成适配器类的 class 对象。
      * @return
      */
     private Class<?> getAdaptiveExtensionClass() {
@@ -1022,16 +1045,23 @@ public class ExtensionLoader<T> {
 
     /**
      * 真正创建适配器类 Class对象。
+     *
+     *  【 该方法根据字符串代码生成适配器的Class对象并返回 】
      * @return
      */
     private Class<?> createAdaptiveExtensionClass() {
+
+        /**
+         *  {@link AdaptiveClassCodeGenerator#AdaptiveClassCodeGenerator(Class, String)}
+         *  生成字符串代码 {@link AdaptiveClassCodeGenerator#generate()}
+         */
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
 
         /**
-         *  获取 `Compiler` 实现类 {@link ExtensionLoader#getExtensionLoader(Class)}
+         *  获取 `Compiler` 实现类 “JavassistCompiler” {@link ExtensionLoader#getExtensionLoader(Class)}
          *
-         * 【动态编译】根据源文件生成Class 对象 {@link org.apache.dubbo.common.compiler.support.AbstractCompiler#compile(String, ClassLoader)}
+         * 【动态编译】根据源文件生成Class 对象 {@link org.apache.dubbo.common.compiler.support.JavassistCompiler#compile(String, ClassLoader)}
          */
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
         return compiler.compile(code, classLoader);

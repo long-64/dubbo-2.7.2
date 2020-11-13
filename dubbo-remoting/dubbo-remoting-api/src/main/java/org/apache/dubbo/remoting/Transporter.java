@@ -27,6 +27,8 @@ import org.apache.dubbo.common.extension.SPI;
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
  * @see org.apache.dubbo.remoting.Transporters
+ *
+ *  网络传输层。NettyTransporter（默认实现）、MinaTransporter
  */
 @SPI("netty")
 public interface Transporter {

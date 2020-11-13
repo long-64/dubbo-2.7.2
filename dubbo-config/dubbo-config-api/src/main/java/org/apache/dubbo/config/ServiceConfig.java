@@ -386,7 +386,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (shouldDelay()) {
 
             /**
-             * 使用 `ScheduledExecutorService`
+             * 使用 `ScheduledExecutorService` 进行延迟发布。
              */
             delayExportExecutor.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {

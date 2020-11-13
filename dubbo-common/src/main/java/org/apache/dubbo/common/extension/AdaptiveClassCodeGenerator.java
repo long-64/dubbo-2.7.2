@@ -82,6 +82,8 @@ public class AdaptiveClassCodeGenerator {
     
     /**
      * generate and return class code
+     *
+     *  生成 “字符串” 适配器类。
      */
     public String generate() {
         // no need to generate adaptive class since there's no adaptive method found.
@@ -90,12 +92,20 @@ public class AdaptiveClassCodeGenerator {
         }
 
         StringBuilder code = new StringBuilder();
+
+        // 定义 packet
         code.append(generatePackageInfo());
+
+        // import 相关包
         code.append(generateImports());
+
+        // 对应 适配器类 " %s$Adaptive "
         code.append(generateClassDeclaration());
         
         Method[] methods = type.getMethods();
         for (Method method : methods) {
+
+            // 生成对应 Method。
             code.append(generateMethod(method));
         }
         code.append("}");

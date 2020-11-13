@@ -22,6 +22,8 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  * Protocol. (API/SPI, Singleton, ThreadSafe)
+ *
+ *  远程调用层， 封装 RPC 调用逻辑。
  */
 @SPI("dubbo")
 public interface Protocol {

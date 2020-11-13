@@ -23,6 +23,8 @@ import org.apache.dubbo.common.extension.SPI;
  *
  *
  *  动态编译
+ *
+ *   默认实现类 {@link org.apache.dubbo.common.compiler.support.JavassistCompiler}
  */
 @SPI("javassist")
 public interface Compiler {

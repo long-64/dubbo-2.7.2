@@ -64,6 +64,12 @@ public abstract class AbstractCompiler implements Compiler {
                 throw new IllegalStateException("The java code not endsWith \"}\", code: \n" + code + "\n");
             }
             try {
+
+                /**
+                 *  调用子类方法，默认 {@link JavassistCompiler#doCompile(String, String)}
+                 *
+                 *   还有 JDK {@link JdkCompiler#doCompile(String, String)}
+                 */
                 return doCompile(className, code);
             } catch (RuntimeException t) {
                 throw t;
