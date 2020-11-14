@@ -32,7 +32,7 @@ import java.util.List;
  * Usually used for non-idempotent write operations
  *
  * <a href="http://en.wikipedia.org/wiki/Fail-fast">Fail-fast</a>
- *
+ *  快速失败策略。
  */
 public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -43,13 +43,21 @@ public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @Override
     public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         checkInvokers(invokers, invocation);
+
+        /**
+         * 使用负载均衡策略，选择其中一个服务提供者
+         */
         Invoker<T> invoker = select(loadbalance, invocation, invokers, null);
         try {
+
+            // 执行远程调用
             return invoker.invoke(invocation);
         } catch (Throwable e) {
             if (e instanceof RpcException && ((RpcException) e).isBiz()) { // biz exception.
                 throw (RpcException) e;
             }
+
+            // 出错直接抛出异常。
             throw new RpcException(e instanceof RpcException ? ((RpcException) e).getCode() : 0,
                     "Failfast invoke providers " + invoker.getUrl() + " " + loadbalance.getClass().getSimpleName()
                             + " select from all providers " + invokers + " for service " + getInterface().getName()

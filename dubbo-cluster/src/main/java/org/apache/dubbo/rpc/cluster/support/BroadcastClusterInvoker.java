@@ -31,6 +31,7 @@ import java.util.List;
 /**
  * BroadcastClusterInvoker
  *
+ *  广播调用
  */
 public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -47,6 +48,8 @@ public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
         RpcContext.getContext().setInvokers((List) invokers);
         RpcException exception = null;
         Result result = null;
+
+        // 循环，轮询每个机器进行调用，其中 result 为最后一个机器的结果。
         for (Invoker<T> invoker : invokers) {
             try {
                 result = invoker.invoke(invocation);

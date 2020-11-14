@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 
 /**
  * ConsistentHashLoadBalance
+ *
+ *  一直哈希，负载均衡
  */
 public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "consistenthash";
@@ -78,6 +80,8 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             this.virtualInvokers = new TreeMap<Long, Invoker<T>>();
             this.identityHashCode = identityHashCode;
             URL url = invokers.get(0).getUrl();
+
+            // 获取设置的虚拟节点个数，默认为 160
             this.replicaNumber = url.getMethodParameter(methodName, HASH_NODES, 160);
             String[] index = COMMA_SPLIT_PATTERN.split(url.getMethodParameter(methodName, HASH_ARGUMENTS, "0"));
             argumentIndex = new int[index.length];
@@ -96,9 +100,20 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             }
         }
 
+        /**
+         * 选择一个服务提供者
+         * @param invocation
+         * @return
+         */
         public Invoker<T> select(Invocation invocation) {
+
+            // 获取参与一致性 Hash 算法的 key, 默认是第一个参数。
             String key = toKey(invocation.getArguments());
+
+            // 根据具体算法计算，改 key 对应的Md5 值。
             byte[] digest = md5(key);
+
+            // 计算改 key, 对应 Hash 环上哪一个点，并选择该点对应的 服务提供者。
             return selectForKey(hash(digest, 0));
         }
 

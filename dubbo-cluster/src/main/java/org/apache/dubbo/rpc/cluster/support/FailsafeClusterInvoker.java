@@ -33,7 +33,9 @@ import java.util.List;
  * Usually used to write audit logs and other operations
  *
  * <a href="http://en.wikipedia.org/wiki/Fail-safe">Fail-safe</a>
+ *  失败安全
  *
+ *   于 {@link FailfastClusterInvoker } 不同的是，失败不会抛出异常。
  */
 public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
     private static final Logger logger = LoggerFactory.getLogger(FailsafeClusterInvoker.class);
@@ -46,6 +48,10 @@ public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
     public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         try {
             checkInvokers(invokers, invocation);
+
+            /**
+             * 使用负载均衡策略，选择其中一个服务提供者
+             */
             Invoker<T> invoker = select(loadbalance, invocation, invokers, null);
             return invoker.invoke(invocation);
         } catch (Throwable e) {

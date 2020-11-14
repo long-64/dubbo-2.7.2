@@ -55,14 +55,20 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+
+        // 所有服务提供者
         List<Invoker<T>> copyInvokers = invokers;
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
+
+        // 获取重试次数（默认重试 2次）
         int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
         if (len <= 0) {
             len = 1;
         }
         // retry loop.
+
+        // 使用循环、失败重试
         RpcException le = null; // last exception.
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
@@ -70,14 +76,29 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             //Reselect before retry to avoid a change of candidate `invokers`.
             //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
             if (i > 0) {
+                /**
+                 * 如果当前实例已经被销毁，则抛出异常
+                 */
                 checkWhetherDestroyed();
+
+                /**
+                 * 调用父类获取 invoker 列表 {@link AbstractClusterInvoker#list(Invocation)}
+                 */
                 copyInvokers = list(invocation);
                 // check again
+
+                // 重新检查一下。
                 checkInvokers(copyInvokers, invocation);
             }
+
+            /**
+             * 选择负载均衡策略。
+             */
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);
+
+            // 发起远程调用。
             try {
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {

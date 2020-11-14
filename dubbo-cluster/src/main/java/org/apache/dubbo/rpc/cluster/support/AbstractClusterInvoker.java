@@ -156,6 +156,10 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+
+        /**
+         * 负载均衡选择器 {@link org.apache.dubbo.rpc.cluster.loadbalance.AbstractLoadBalance#select(List, URL, Invocation)}
+         */
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
@@ -245,6 +249,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         List<Invoker<T>> invokers = list(invocation);
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+
+        /**
+         * 子类实现，具体，容错
+         *  默认方式 {@link FailoverClusterInvoker#doInvoke(Invocation, List, LoadBalance)}
+         */
         return doInvoke(invocation, invokers, loadbalance);
     }
 

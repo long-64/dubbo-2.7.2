@@ -32,12 +32,17 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Round robin load balance.
+ *
+ *  轮训选择器。
  */
 public class RoundRobinLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "roundrobin";
     
     private static final int RECYCLE_PERIOD = 60000;
-    
+
+    /**
+     * 记录 当前提供者的权重、最后一次更新的时间。
+     */
     protected static class WeightedRoundRobin {
         private int weight;
         private AtomicLong current = new AtomicLong(0);
@@ -86,12 +91,18 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+
+        // 获取调用方法的 key
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
+
+        // 获取该调用方法对应的，每个服务提供者的 WeightedRoundRobin 对象组成的 Map。
         ConcurrentMap<String, WeightedRoundRobin> map = methodWeightMap.get(key);
         if (map == null) {
             methodWeightMap.putIfAbsent(key, new ConcurrentHashMap<String, WeightedRoundRobin>());
             map = methodWeightMap.get(key);
         }
+
+        // 遍历所有提供者，计算总权重和权重最大的提供者
         int totalWeight = 0;
         long maxCurrent = Long.MIN_VALUE;
         long now = System.currentTimeMillis();
@@ -109,6 +120,8 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             }
             if (weight != weightedRoundRobin.getWeight()) {
                 //weight changed
+
+                // 权重变化
                 weightedRoundRobin.setWeight(weight);
             }
             long cur = weightedRoundRobin.increaseCurrent();
@@ -124,21 +137,32 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             if (updateLock.compareAndSet(false, true)) {
                 try {
                     // copy -> modify -> update reference
+                    // 拷贝新值
                     ConcurrentMap<String, WeightedRoundRobin> newMap = new ConcurrentHashMap<String, WeightedRoundRobin>();
                     newMap.putAll(map);
+
+                    // 更新 Map 移除过期的。
                     Iterator<Entry<String, WeightedRoundRobin>> it = newMap.entrySet().iterator();
                     while (it.hasNext()) {
                         Entry<String, WeightedRoundRobin> item = it.next();
+
+                        /**
+                         * RECYCLE_PERIOD 清理周期，如果服务提供者，耗时 RECYCLE_PERIOD 还没有更新自己的 WeightedRoundRobin 对象，就会被自动回收。
+                         */
                         if (now - item.getValue().getLastUpdate() > RECYCLE_PERIOD) {
                             it.remove();
                         }
                     }
+
+                    // 更新
                     methodWeightMap.put(key, newMap);
                 } finally {
                     updateLock.set(false);
                 }
             }
         }
+
+        // 返回选择的提供者，Invoker 对象。
         if (selectedInvoker != null) {
             selectedWRR.sel(totalWeight);
             return selectedInvoker;

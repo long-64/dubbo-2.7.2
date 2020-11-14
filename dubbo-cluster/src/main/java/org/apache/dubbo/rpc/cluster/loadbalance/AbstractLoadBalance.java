@@ -42,6 +42,9 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      * @param warmup the warmup time in milliseconds
      * @param weight the weight of an invoker
      * @return weight which takes warmup into account
+     *
+     *  也就是说，如果当服务提供者还没有过预热器，则用户设置的权重将通过 uptime/ warmup 打折扣。
+     *   如果一个服务提供者设置的权重大，但是还没有过预热时间，那么重新计算出的权重就比实际的小。
      */
     static int calculateWarmupWeight(int uptime, int warmup, int weight) {
         int ww = (int) ((float) uptime / ((float) warmup / (float) weight));
@@ -56,6 +59,10 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
+
+        /**
+         *  有子类实现
+         */
         return doSelect(invokers, url, invocation);
     }
 
@@ -69,15 +76,30 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      * @param invoker    the invoker
      * @param invocation the invocation of this invoker
      * @return weight
+     *
+     *  计算权重
      */
     protected int getWeight(Invoker<?> invoker, Invocation invocation) {
+
+        // 获取用户对该服务设置的权重，默认情况下 是 100.
         int weight = invoker.getUrl().getMethodParameter(invocation.getMethodName(), WEIGHT_KEY, DEFAULT_WEIGHT);
         if (weight > 0) {
+
+            // 获取该服务提供者发布服务，时间戳
             long timestamp = invoker.getUrl().getParameter(REMOTE_TIMESTAMP_KEY, 0L);
             if (timestamp > 0L) {
+
+                // 计算该服务已经发布了多少时间
                 int uptime = (int) (System.currentTimeMillis() - timestamp);
+
+                // 获取用户设置，该服务的预热时间，默认 10分钟
                 int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);
+
                 if (uptime > 0 && uptime < warmup) {
+
+                    /**
+                     * 如果该服务提供者，还没有过预热器，则让该服务提供者的预热时间参与计算权重 {@link #calculateWarmupWeight(int, int, int)}
+                     */
                     weight = calculateWarmupWeight(uptime, warmup, weight);
                 }
             }
