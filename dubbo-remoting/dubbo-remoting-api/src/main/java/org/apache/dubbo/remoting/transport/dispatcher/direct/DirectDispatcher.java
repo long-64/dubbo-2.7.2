@@ -22,6 +22,8 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * Direct dispatcher
+ *
+ *   direct 线程模型 （所有消息都不发业务线程，全部在 IO线程上直接执行。）
  */
 public class DirectDispatcher implements Dispatcher {
 
@@ -29,6 +31,10 @@ public class DirectDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+
+        /**
+         * 直接返回参数 handler.
+         */
         return handler;
     }
 

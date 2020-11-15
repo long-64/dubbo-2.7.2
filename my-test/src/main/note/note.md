@@ -24,3 +24,10 @@
  ### 服务消费方
  ##### 服务消费方入口
  - `ReferenceConfig # get()`
+ 
+
+#### 线程模式
+- `Dispatcher 接口` 默认: `AllDispatcher`
+
+#### 线程池
+- `ThreadPool 接口` 默认： 

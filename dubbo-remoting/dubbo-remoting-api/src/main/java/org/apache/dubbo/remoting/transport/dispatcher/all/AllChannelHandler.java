@@ -33,9 +33,18 @@ import java.util.concurrent.RejectedExecutionException;
 public class AllChannelHandler extends WrappedChannelHandler {
 
     public AllChannelHandler(ChannelHandler handler, URL url) {
+
+        /**
+         * 调用父类构造函数 {@link WrappedChannelHandler#WrappedChannelHandler(ChannelHandler, URL)}
+         */
         super(handler, url);
     }
 
+    /**
+     * 链接完成事件、交给业务线程池处理。
+     * @param channel
+     * @throws RemotingException
+     */
     @Override
     public void connected(Channel channel) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -51,6 +60,12 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    /**
+     *  链接断开事件，交给业务线程池处理。
+     *
+     * @param channel
+     * @throws RemotingException
+     */
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -61,6 +76,14 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    /**
+     *
+     * 请求响应事件、交给业务线程池处理
+     *
+     * @param channel
+     * @param message
+     * @throws RemotingException
+     */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -69,7 +92,14 @@ public class AllChannelHandler extends WrappedChannelHandler {
         } catch (Throwable t) {
             //TODO A temporary solution to the problem that the exception information can not be sent to the opposite end after the thread pool is full. Need a refactoring
             //fix The thread pool is full, refuses to call, does not return, and causes the consumer to wait for time out
-        	if(message instanceof Request && t instanceof RejectedExecutionException){
+
+            /**
+             *
+             * TODO 临时解决线程池满后，异常无法发送对端的问题。
+             * fix 线程池拒绝调用不返回，异常消息者一直等待时间。
+             *
+             */
+            if(message instanceof Request && t instanceof RejectedExecutionException){
         		Request request = (Request)message;
         		if(request.isTwoWay()){
         			String msg = "Server side(" + url.getIp() + "," + url.getPort() + ") threadpool is exhausted ,detail msg:" + t.getMessage();
@@ -84,6 +114,14 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    /**
+     *
+     * 异常处理事件，交给业务线程池处理。
+     *
+     * @param channel
+     * @param exception
+     * @throws RemotingException
+     */
     @Override
     public void caught(Channel channel, Throwable exception) throws RemotingException {
         ExecutorService executor = getExecutorService();

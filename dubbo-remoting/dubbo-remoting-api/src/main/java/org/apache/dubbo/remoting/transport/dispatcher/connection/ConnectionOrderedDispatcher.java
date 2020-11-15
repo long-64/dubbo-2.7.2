@@ -22,6 +22,8 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * connect disconnect ensure the order
+ *
+ *  connection 线程模型 （io 线程上将连接事件、断开事件放入队列。有序逐个执行。其他线程派发到业务线程池处理。）
  */
 public class ConnectionOrderedDispatcher implements Dispatcher {
 
@@ -29,6 +31,10 @@ public class ConnectionOrderedDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+
+        /**
+         * {@link ConnectionOrderedChannelHandler#ConnectionOrderedChannelHandler(ChannelHandler, URL)} 
+         */
         return new ConnectionOrderedChannelHandler(handler, url);
     }
 

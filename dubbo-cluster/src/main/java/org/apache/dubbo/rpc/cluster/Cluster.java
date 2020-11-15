@@ -29,6 +29,7 @@ import org.apache.dubbo.rpc.cluster.support.FailoverCluster;
  * <a href="http://en.wikipedia.org/wiki/Fault-tolerant_system">Fault-Tolerant</a>
  *
  *  dubbo 容错机制。
+ *      默认 {@link org.apache.dubbo.rpc.cluster.support.FailoverClusterInvoker}
  */
 @SPI(FailoverCluster.NAME)
 public interface Cluster {

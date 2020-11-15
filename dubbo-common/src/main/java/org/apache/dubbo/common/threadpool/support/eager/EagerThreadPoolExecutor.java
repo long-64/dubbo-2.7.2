@@ -26,6 +26,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * EagerThreadPoolExecutor
+ *
+ * ThreadPoolExecutor
+ *      当线程池核心线程个数达到设置的阈值时，新来的任务会放入线程池队列，
+ *      等队列满之后，才会开启新线程来处理任务（前提是当前线程个数没有超过线程池最大线程个数）
+ *
+ *  EagerThreadPoolExecutor
+ *      当线程池和想线程个数达到设置阈值时，新来的任务不会放入线程队列。而是会开启新线程处理任务
+ *      （前提是当前线程个数没有超过线程最大个数。） 当线程个数达到最大线程个数，才会把任务放入线程池队列。
+ *
  */
 public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
 
@@ -57,6 +66,8 @@ public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
 
     @Override
     public void execute(Runnable command) {
+
+        // 如果任务为 null， 则抛出异常。
         if (command == null) {
             throw new NullPointerException();
         }
@@ -68,6 +79,10 @@ public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
             // retry to offer the task into queue.
             final TaskQueue queue = (TaskQueue) super.getQueue();
             try {
+
+                /**
+                 *  {@link TaskQueue#retryOffer(Runnable, long, TimeUnit)}
+                 */
                 if (!queue.retryOffer(command, 0, TimeUnit.MILLISECONDS)) {
                     submittedTaskCount.decrementAndGet();
                     throw new RejectedExecutionException("Queue capacity is full.", rx);

@@ -22,6 +22,8 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * Only message receive uses the thread pool.
+ *
+ *  message 线程模型（只有请求响应消息派发到业务线程，其他消息如连接事件、断开事件、心跳事件，直接在IO线程上执行。）
  */
 public class MessageOnlyDispatcher implements Dispatcher {
 
@@ -29,6 +31,10 @@ public class MessageOnlyDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+
+        /**
+         * {@link MessageOnlyChannelHandler#MessageOnlyChannelHandler(ChannelHandler, URL)}
+         */
         return new MessageOnlyChannelHandler(handler, url);
     }
 

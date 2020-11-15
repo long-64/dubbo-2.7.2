@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit;
  * or the currentPoolThreadSize more than executor's maximumPoolSize.
  * That can make the executor create new worker
  * when the task num is bigger than corePoolSize but less than maximumPoolSize.
+ *
+ *  {@link EagerThreadPool} 队列。
  */
 public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable> {
 
@@ -50,16 +52,24 @@ public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable>
 
         int currentPoolThreadSize = executor.getPoolSize();
         // have free worker. put task into queue to let the worker deal with task.
+
+        /**
+         * 如果提交个线程池的任务个数小于当前线程池个数，则提交大队列，让空闲线程处理。
+         */
         if (executor.getSubmittedTaskCount() < currentPoolThreadSize) {
             return super.offer(runnable);
         }
 
         // return false to let executor create new worker.
+
+        // 如果当前线程池个数小于 线程池设置的最大个数，返回 false。
         if (currentPoolThreadSize < executor.getMaximumPoolSize()) {
             return false;
         }
 
         // currentPoolThreadSize >= max
+
+        // 如果当前线程池线程个数大于等于线程池设置的最大个数。则添加队列。
         return super.offer(runnable);
     }
 

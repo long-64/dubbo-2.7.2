@@ -51,6 +51,8 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_SERIALIZATION_PROTOBUF;
 
 /**
  * GenericInvokerFilter.
+ *
+ *  服务提供方使用 GenericFilter 拦截请求，并把泛化参数进行反序列化处理，然后把请求转发给具体的服务进行执行。
  */
 @Activate(group = CommonConstants.PROVIDER, order = -20000)
 public class GenericFilter extends ListenableFilter {
@@ -61,28 +63,40 @@ public class GenericFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+
+        // 判断是否为 泛化请求。
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
                 && inv.getArguments() != null
                 && inv.getArguments().length == 3
                 && !GenericService.class.isAssignableFrom(invoker.getInterface())) {
+
+            // 获取参数名称、参数类型、参数值
             String name = ((String) inv.getArguments()[0]).trim();
             String[] types = (String[]) inv.getArguments()[1];
             Object[] args = (Object[]) inv.getArguments()[2];
             try {
+
+                // 使用反射获取调用方法。
                 Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
                 Class<?>[] params = method.getParameterTypes();
                 if (args == null) {
                     args = new Object[params.length];
                 }
+
+                // 获取泛化引用方法的泛化类型。
                 String generic = inv.getAttachment(GENERIC_KEY);
 
                 if (StringUtils.isBlank(generic)) {
                     generic = RpcContext.getContext().getAttachment(GENERIC_KEY);
                 }
 
+
+                // 泛化类型为空，则使用 generic=true 的泛化方式
                 if (StringUtils.isEmpty(generic)
                         || ProtocolUtils.isDefaultGenericSerialization(generic)) {
                     args = PojoUtils.realize(args, params, method.getGenericParameterTypes());
+
+                    // generic = nativejava 方式
                 } else if (ProtocolUtils.isJavaGenericSerialization(generic)) {
                     for (int i = 0; i < args.length; i++) {
                         if (byte[].class == args[i].getClass()) {
@@ -103,6 +117,8 @@ public class GenericFilter extends ListenableFilter {
                                             args[i].getClass());
                         }
                     }
+
+                    // generic=bean 的方式
                 } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                     for (int i = 0; i < args.length; i++) {
                         if (args[i] instanceof JavaBeanDescriptor) {
@@ -138,6 +154,8 @@ public class GenericFilter extends ListenableFilter {
                                         args[0].getClass().getName());
                     }
                 }
+
+                // 传递请求到 filter 链的下一个 filter。最后执行具体服务。
                 return invoker.invoke(new RpcInvocation(method, args, inv.getAttachments()));
             } catch (NoSuchMethodException e) {
                 throw new RpcException(e.getMessage(), e);

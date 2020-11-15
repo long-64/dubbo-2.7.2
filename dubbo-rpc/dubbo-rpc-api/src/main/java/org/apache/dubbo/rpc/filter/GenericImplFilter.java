@@ -46,6 +46,8 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
 /**
  * GenericImplInvokerFilter
+ *
+ *   服务消费端，使用 GenericImplfilter 拦截泛华调用。把泛化参数进行校验并发起远程调用；
  */
 @Activate(group = CommonConstants.CONSUMER, value = GENERIC_KEY, order = 20000)
 public class GenericImplFilter extends ListenableFilter {

@@ -90,6 +90,10 @@ public class ProtocolFilterWrapper implements Protocol {
                     public Result invoke(Invocation invocation) throws RpcException {
                         Result asyncResult;
                         try {
+
+                            /**
+                             * 泛化处理 {@link org.apache.dubbo.rpc.filter.GenericFilter#invoke(Invoker, Invocation)}
+                             */
                             asyncResult = filter.invoke(next, invocation);
                         } catch (Exception e) {
                             // onError callback

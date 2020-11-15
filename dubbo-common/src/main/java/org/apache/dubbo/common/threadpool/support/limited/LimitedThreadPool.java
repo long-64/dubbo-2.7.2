@@ -40,15 +40,29 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 /**
  * Creates a thread pool that creates new threads as needed until limits reaches. This thread pool will not shrink
  * automatically.
+ *
+ *      线程池中线程个数随着需要量动态添加，但是数量不超过配置的阈值，另外，空闲线程不会被回收。会一直存在。
  */
 public class LimitedThreadPool implements ThreadPool {
 
     @Override
     public Executor getExecutor(URL url) {
+
+        // 获取线程名字
         String name = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
+
+        // 获取线程核心线程个数
         int cores = url.getParameter(CORE_THREADS_KEY, DEFAULT_CORE_THREADS);
+
+        // 获取线程池最大线程个数
         int threads = url.getParameter(THREADS_KEY, DEFAULT_THREADS);
+
+        // 获取线程池队列大小。
         int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES);
+
+        /**
+         * 使用 JUC包 ThreadPoolExecutor 创建线程池
+         */
         return new ThreadPoolExecutor(cores, threads, Long.MAX_VALUE, TimeUnit.MILLISECONDS,
                 queues == 0 ? new SynchronousQueue<Runnable>() :
                         (queues < 0 ? new LinkedBlockingQueue<Runnable>()

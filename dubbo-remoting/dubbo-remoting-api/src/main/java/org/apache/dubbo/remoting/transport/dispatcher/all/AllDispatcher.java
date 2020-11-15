@@ -22,13 +22,26 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * default thread pool configure
+ *
+ *  all 线程模型 （所有消息都派发到业务线程，包括请求、响应、连接事件、断开事件。心跳事件。）
+ *
  */
 public class AllDispatcher implements Dispatcher {
 
     public static final String NAME = "all";
 
+    /**
+     * 扩展接口具体实现
+     * @param handler
+     * @param url
+     * @return
+     */
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+
+        /**
+         * {@link AllChannelHandler#AllChannelHandler(ChannelHandler, URL)}
+         */
         return new AllChannelHandler(handler, url);
     }
 

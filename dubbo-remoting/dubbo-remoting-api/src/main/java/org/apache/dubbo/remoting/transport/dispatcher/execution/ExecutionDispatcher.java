@@ -22,6 +22,8 @@ import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * In addition to sending all the use thread pool processing
+ *
+ *  execution 线程模型 （只有请求类消息派发到业务线程池处理，但响应、连接、断开、心跳事件等消息直接在IO线程上执行）
  */
 public class ExecutionDispatcher implements Dispatcher {
 
@@ -29,6 +31,10 @@ public class ExecutionDispatcher implements Dispatcher {
 
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
+
+        /**
+         * {@link ExecutionChannelHandler#ExecutionChannelHandler(ChannelHandler, URL)}
+         */
         return new ExecutionChannelHandler(handler, url);
     }
 
