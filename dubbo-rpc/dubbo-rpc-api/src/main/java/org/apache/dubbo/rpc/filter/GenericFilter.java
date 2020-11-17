@@ -61,6 +61,15 @@ public class GenericFilter extends ListenableFilter {
         super.listener = new GenericListener();
     }
 
+    /**
+     *
+     *  AbstractProxyInvoker 调用之前。
+     *
+     * @param invoker
+     * @param inv
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
 
@@ -155,7 +164,9 @@ public class GenericFilter extends ListenableFilter {
                     }
                 }
 
-                // 传递请求到 filter 链的下一个 filter。最后执行具体服务。
+                /**
+                 * 传递请求到 filter 链的下一个 filter。最后执行具体服务。{@link org.apache.dubbo.rpc.proxy.AbstractProxyInvoker#invoke(Invocation)}
+                 */
                 return invoker.invoke(new RpcInvocation(method, args, inv.getAttachments()));
             } catch (NoSuchMethodException e) {
                 throw new RpcException(e.getMessage(), e);

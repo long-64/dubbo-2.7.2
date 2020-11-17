@@ -244,6 +244,10 @@ public class RpcContext {
      * @param future
      */
     public void setFuture(CompletableFuture<?> future) {
+
+        /**
+         * {@link FutureContext#setFuture(CompletableFuture)}
+         */
         FutureContext.setFuture(future);
     }
 

@@ -241,6 +241,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         checkWhetherDestroyed();
 
         // binding attachments into invocation.
+
+        /**
+         * 【 Dubbo 参数传递 】
+         * 从上下文中获取附件属性并设置到 RPCInvocation 对象中。
+         */
         Map<String, String> contextAttachments = RpcContext.getContext().getAttachments();
         if (contextAttachments != null && contextAttachments.size() != 0) {
             ((RpcInvocation) invocation).addAttachments(contextAttachments);

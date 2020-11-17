@@ -36,11 +36,15 @@ public class FutureAdapter<V> extends CompletableFuture<V> {
         this.appResponseFuture = future;
         future.whenComplete((appResponse, t) -> {
             if (t != null) {
+
+                // 异常信息。
                 if (t instanceof CompletionException) {
                     t = t.getCause();
                 }
                 this.completeExceptionally(t);
             } else {
+
+                // 判断是否存在异常信息。
                 if (appResponse.hasException()) {
                     this.completeExceptionally(appResponse.getException());
                 } else {
@@ -51,6 +55,12 @@ public class FutureAdapter<V> extends CompletableFuture<V> {
     }
 
     // TODO figure out the meaning of cancel in DefaultFuture.
+
+    /**
+     * 把异常，设置到 CompletableFuture 中。
+     * @param mayInterruptIfRunning
+     * @return
+     */
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         return appResponseFuture.cancel(mayInterruptIfRunning);

@@ -91,7 +91,7 @@ public abstract class AbstractProtocol implements Protocol {
 
         /**
          *  子类实现的方法 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#protocolBindingRefer(Class, URL)}
-         *  {@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol#protocolBindingRefer(Class, URL)}
+         *   【 本地服务 】 {@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol#protocolBindingRefer(Class, URL)}
          *  {@link org.apache.dubbo.rpc.support.MockProtocol#protocolBindingRefer(Class, URL)}
          */
         return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));

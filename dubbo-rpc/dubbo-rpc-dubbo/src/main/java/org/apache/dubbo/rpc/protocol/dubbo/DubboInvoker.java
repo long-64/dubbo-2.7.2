@@ -102,7 +102,13 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 RpcContext.getContext().setFuture(null);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             } else {
+
+                // 异步 RpcResult
                 AsyncRpcResult asyncRpcResult = new AsyncRpcResult(inv);
+
+                /**
+                 * 异步调用 {@link ReferenceCountExchangeClient#request(Object, int)}
+                 */
                 CompletableFuture<Object> responseFuture = currentClient.request(inv, timeout);
                 responseFuture.whenComplete((obj, t) -> {
                     if (t != null) {
@@ -111,6 +117,10 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                         asyncRpcResult.complete((AppResponse) obj);
                     }
                 });
+
+                /**
+                 * 为兼容，返回适配器对象 {@link FutureAdapter#FutureAdapter(CompletableFuture)}
+                 */
                 RpcContext.getContext().setFuture(new FutureAdapter(asyncRpcResult));
                 return asyncRpcResult;
             }

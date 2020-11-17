@@ -60,6 +60,15 @@ public class GenericImplFilter extends ListenableFilter {
         super.listener = new GenericImplListener();
     }
 
+    /**
+     *
+     *  在 DubboInvoker 发起远程调用之前，
+     *
+     * @param invoker
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         String generic = invoker.getUrl().getParameter(GENERIC_KEY);
@@ -94,12 +103,16 @@ public class GenericImplFilter extends ListenableFilter {
             invocation2.setParameterTypes(GENERIC_PARAMETER_TYPES);
             invocation2.setArguments(new Object[]{methodName, types, args});
             return invoker.invoke(invocation2);
+
+            // 判断是否为泛化调用
         } else if ((invocation.getMethodName().equals($INVOKE) || invocation.getMethodName().equals($INVOKE_ASYNC))
                 && invocation.getArguments() != null
                 && invocation.getArguments().length == 3
                 && ProtocolUtils.isGeneric(generic)) {
 
             Object[] args = (Object[]) invocation.getArguments()[2];
+
+            // 为 nativajava 方式。
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
 
                 for (Object arg : args) {
@@ -107,6 +120,8 @@ public class GenericImplFilter extends ListenableFilter {
                         error(generic, byte[].class.getName(), arg.getClass().getName());
                     }
                 }
+
+                // 为 bean 方式。
             } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 for (Object arg : args) {
                     if (!(arg instanceof JavaBeanDescriptor)) {
@@ -115,6 +130,7 @@ public class GenericImplFilter extends ListenableFilter {
                 }
             }
 
+            // 设置泛化调用方式，以便服务端使用。
             invocation.setAttachment(
                     GENERIC_KEY, invoker.getUrl().getParameter(GENERIC_KEY));
         }

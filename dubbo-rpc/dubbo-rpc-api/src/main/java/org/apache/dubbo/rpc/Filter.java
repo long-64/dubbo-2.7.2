@@ -54,6 +54,8 @@ public interface Filter {
      * @param invoker
      * @param invocation
      * @return
+     *
+     *  并且默认返回传递过来的result
      */
     @Deprecated
     default Result onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {

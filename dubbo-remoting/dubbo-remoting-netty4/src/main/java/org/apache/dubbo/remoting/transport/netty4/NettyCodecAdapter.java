@@ -32,6 +32,8 @@ import java.util.List;
 
 /**
  * NettyCodecAdapter.
+ *
+ *  管理编解码，被设置到 Netty 链接的 Channel 管线里。
  */
 final public class NettyCodecAdapter {
 
@@ -59,6 +61,10 @@ final public class NettyCodecAdapter {
         return decoder;
     }
 
+
+    /**
+     * 编码
+     */
     private class InternalEncoder extends MessageToByteEncoder {
 
         @Override
@@ -74,6 +80,9 @@ final public class NettyCodecAdapter {
         }
     }
 
+    /**
+     * 解码
+     */
     private class InternalDecoder extends ByteToMessageDecoder {
 
         @Override

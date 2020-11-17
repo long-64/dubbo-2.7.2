@@ -52,6 +52,8 @@ public class AsyncRpcResult extends AbstractResult {
 
     public AsyncRpcResult(Invocation invocation) {
         this.invocation = invocation;
+
+        // 为避免其他调用修改山下文，这里拷贝保存。
         this.storedContext = RpcContext.getContext();
         this.storedServerContext = RpcContext.getServerContext();
     }

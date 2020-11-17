@@ -51,7 +51,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
     /**
      *
-     *  如何形成 “责任链”
+     *  建立和使用 Invoker "责任链"
      *
      * @param invoker
      * @param key
@@ -93,6 +93,9 @@ public class ProtocolFilterWrapper implements Protocol {
 
                             /**
                              * 泛化处理 {@link org.apache.dubbo.rpc.filter.GenericFilter#invoke(Invoker, Invocation)}
+                             * 消费端并发控制 {@link org.apache.dubbo.rpc.filter.ActiveLimitFilter#invoke(Invoker, Invocation)}
+                             *
+                             *   asyncResult: Dubbo: 是异步执行，返回Future。
                              */
                             asyncResult = filter.invoke(next, invocation);
                         } catch (Exception e) {
@@ -129,6 +132,13 @@ public class ProtocolFilterWrapper implements Protocol {
         return protocol.getDefaultPort();
     }
 
+    /**
+     * 发布服务。
+     * @param invoker Service invoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
@@ -140,7 +150,7 @@ public class ProtocolFilterWrapper implements Protocol {
         }
 
         /**
-         *   创建Filter 链 {@link #buildInvokerChain(Invoker, String, String)}
+         *   创建 `Filter` 链 {@link #buildInvokerChain(Invoker, String, String)}
          *   dubboProtocal {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
          */
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));

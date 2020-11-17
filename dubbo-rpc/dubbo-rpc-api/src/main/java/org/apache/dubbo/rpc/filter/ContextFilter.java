@@ -46,6 +46,8 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
  * current execution thread.
  *
  * @see RpcContext
+ *
+ *  服务提供方，隐式传参。
  */
 @Activate(group = PROVIDER, order = -10000)
 public class ContextFilter extends ListenableFilter {
@@ -57,7 +59,11 @@ public class ContextFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+
+        // 从 invocation 对象获取附件属性 Map
         Map<String, String> attachments = invocation.getAttachments();
+
+        // 不为 null，则设置到上下文对象中。
         if (attachments != null) {
             attachments = new HashMap<>(attachments);
             attachments.remove(PATH_KEY);

@@ -36,6 +36,8 @@ import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
  * <b>executes</b> is set to 10 and if invoke request where it is already 10 then it will throws exception. It
  * continue the same behaviour un till it is <10.
  *
+ *  服务提供端并发控制.
+ *
  */
 @Activate(group = CommonConstants.PROVIDER, value = EXECUTES_KEY)
 public class ExecuteLimitFilter extends ListenableFilter {
@@ -46,11 +48,28 @@ public class ExecuteLimitFilter extends ListenableFilter {
         super.listener = new ExecuteLimitListener();
     }
 
+    /**
+     *
+     * 在 AbstractProxyInvoker # Invoker 方的真正执行服务处理之前。调用
+     *
+     * @param invoker
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+
+        // 获取URL 和调用方法名称
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
+
+        // 获取设置 executes 的值，默认：0
         int max = url.getMethodParameter(methodName, EXECUTES_KEY, 0);
+
+        /**
+         * 判断是否超过并发限制 {@link RpcStatus#beginCount(URL, String, int)}
+         */
         if (!RpcStatus.beginCount(url, methodName, max)) {
             throw new RpcException("Failed to invoke method " + invocation.getMethodName() + " in provider " +
                     url + ", cause: The service using threads greater than <dubbo:service executes=\"" + max +

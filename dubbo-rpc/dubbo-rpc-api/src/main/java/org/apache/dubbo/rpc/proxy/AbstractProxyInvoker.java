@@ -83,11 +83,23 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         try {
 
             /**
-             * 具体执行本地服务调用 {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory}
+             * 具体执行本地服务调用
+             *  默认: {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory}
+             *  jdk  {@link org.apache.dubbo.rpc.proxy.jdk.JdkProxyFactory}
              */
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
+
+            /**
+             *  开启异步调用  {@link #wrapWithFuture(Object, Invocation)}
+             */
             CompletableFuture<Object> future = wrapWithFuture(value, invocation);
+
+            /**
+             *  {@link AsyncRpcResult#AsyncRpcResult(Invocation)}
+             */
             AsyncRpcResult asyncRpcResult = new AsyncRpcResult(invocation);
+
+            // 监听异步返回。
             future.whenComplete((obj, t) -> {
                 AppResponse result = new AppResponse();
                 if (t != null) {
@@ -113,11 +125,15 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     }
 
     private CompletableFuture<Object> wrapWithFuture (Object value, Invocation invocation) {
+
+        // 判断是否开启异步。
         if (RpcContext.getContext().isAsyncStarted()) {
             return ((AsyncContextImpl)(RpcContext.getContext().getAsyncContext())).getInternalFuture();
         } else if (value instanceof CompletableFuture) {
             return (CompletableFuture<Object>) value;
         }
+
+        // 使用 CompletableFuture 异步执行。
         return CompletableFuture.completedFuture(value);
     }
 

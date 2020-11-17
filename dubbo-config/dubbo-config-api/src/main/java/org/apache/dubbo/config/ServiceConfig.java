@@ -700,15 +700,28 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     @SuppressWarnings({"unchecked", "rawtypes"})
     /**
      * always export injvm
+     *
+     *  本地服务暴露流程
      */
     private void exportLocal(URL url) {
+
+        /**
+         * 设置 协议 `injvm`
+         * host: 127.0.0.1
+         */
         URL local = URLBuilder.from(url)
                 .setProtocol(LOCAL_PROTOCOL)
                 .setHost(LOCALHOST_VALUE)
                 .setPort(0)
                 .build();
+
+        /**
+         * 导出服务 {@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol#export(Invoker)}
+         */
         Exporter<?> exporter = protocol.export(
                 proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
+
+        // 保存导出服务到列表
         exporters.add(exporter);
         logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
     }

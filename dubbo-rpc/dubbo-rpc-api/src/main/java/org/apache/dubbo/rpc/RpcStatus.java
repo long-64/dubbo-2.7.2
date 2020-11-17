@@ -74,9 +74,18 @@ public class RpcStatus {
      * @param url
      * @param methodName
      * @return status
+     *
+     *  获取方法对应 RpcStatus
      */
     public static RpcStatus getStatus(URL url, String methodName) {
         String uri = url.toIdentityString();
+
+        /**
+         *
+         * METHOD_STATISTICS
+         *  Key：具体方法
+         *  value: 服务接口中所有方法的一个缓存。
+         */
         ConcurrentMap<String, RpcStatus> map = METHOD_STATISTICS.get(uri);
         if (map == null) {
             METHOD_STATISTICS.putIfAbsent(uri, new ConcurrentHashMap<String, RpcStatus>());
@@ -101,6 +110,11 @@ public class RpcStatus {
         }
     }
 
+    /**
+     * 递增方法对应的激活并发数
+     * @param url
+     * @param methodName
+     */
     public static void beginCount(URL url, String methodName) {
         beginCount(url, methodName, Integer.MAX_VALUE);
     }
@@ -110,8 +124,14 @@ public class RpcStatus {
      */
     public static boolean beginCount(URL url, String methodName, int max) {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
+
+        /**
+         * 获取对应 RpcStatus
+         */
         RpcStatus appStatus = getStatus(url);
         RpcStatus methodStatus = getStatus(url, methodName);
+
+        // 原子性递增方法对应激活并发数，若超过最大限制，则返回 false、否则返回 ture.
         if (methodStatus.active.incrementAndGet() > max) {
             methodStatus.active.decrementAndGet();
             return false;
@@ -125,6 +145,8 @@ public class RpcStatus {
      * @param url
      * @param elapsed
      * @param succeeded
+     *
+     *  原子性的递减方法对应的激活并发数
      */
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {
         endCount(getStatus(url), elapsed, succeeded);
@@ -132,6 +154,8 @@ public class RpcStatus {
     }
 
     private static void endCount(RpcStatus status, long elapsed, boolean succeeded) {
+
+        // 原子性递减激活并发数。
         status.active.decrementAndGet();
         status.total.incrementAndGet();
         status.totalElapsed.addAndGet(elapsed);

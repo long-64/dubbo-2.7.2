@@ -53,6 +53,10 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
 
     public static InjvmProtocol getInjvmProtocol() {
         if (INSTANCE == null) {
+
+            /**
+             * SPI 内扩展接口。
+             */
             ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(InjvmProtocol.NAME); // load
         }
         return INSTANCE;
@@ -61,6 +65,7 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
     static Exporter<?> getExporter(Map<String, Exporter<?>> map, URL key) {
         Exporter<?> result = null;
 
+        // 看缓存里面是否有对应的本地导出服务。
         if (!key.getServiceKey().contains("*")) {
             result = map.get(key.getServiceKey());
         } else {
@@ -91,6 +96,15 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
 
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+
+        /**
+         * {@link InjvmExporter#InjvmExporter(Invoker, String, Map)}
+         *
+         *  exporterMap {@link AbstractProtocol#exporterMap}
+         *  invoker.getUrl().getServiceKey():
+         *      比如对象 com.books.dubbo.demo.api.GreetingService
+         *      key: dubbo/com.books.dubbo.demo.api.GreetingService
+         */
         return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), exporterMap);
     }
 
