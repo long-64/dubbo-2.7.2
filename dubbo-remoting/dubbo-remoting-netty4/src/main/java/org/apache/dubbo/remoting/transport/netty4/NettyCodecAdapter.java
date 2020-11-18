@@ -73,6 +73,10 @@ final public class NettyCodecAdapter {
             Channel ch = ctx.channel();
             NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
             try {
+
+                /**
+                 *   Exchange 核心编码 {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#encode(org.apache.dubbo.remoting.Channel, ChannelBuffer, Object)}
+                 */
                 codec.encode(channel, buffer, msg);
             } finally {
                 NettyChannel.removeChannelIfDisconnected(ch);
@@ -96,6 +100,10 @@ final public class NettyCodecAdapter {
                 // decode object.
                 do {
                     int saveReaderIndex = message.readerIndex();
+
+                    /**
+                     * {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#decode(org.apache.dubbo.remoting.Channel, ChannelBuffer)}
+                     */
                     Object msg = codec.decode(channel, message);
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                         message.readerIndex(saveReaderIndex);

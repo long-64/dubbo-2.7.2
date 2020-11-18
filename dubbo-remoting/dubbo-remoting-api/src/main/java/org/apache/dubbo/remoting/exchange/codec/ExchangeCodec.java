@@ -63,6 +63,14 @@ public class ExchangeCodec extends TelnetCodec {
         return MAGIC;
     }
 
+    /**
+     *  编码
+     *
+     * @param channel
+     * @param buffer
+     * @param msg
+     * @throws IOException
+     */
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
 
@@ -83,8 +91,19 @@ public class ExchangeCodec extends TelnetCodec {
         }
     }
 
+    /**
+     *
+     *  解码
+     *
+     * @param channel
+     * @param buffer
+     * @return
+     * @throws IOException
+     */
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+
+        // 将 Dubbo 协议头获取到数组 Handler.
         int readable = buffer.readableBytes();
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
         buffer.readBytes(header);
@@ -94,6 +113,8 @@ public class ExchangeCodec extends TelnetCodec {
     @Override
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
         // check magic number.
+
+        // 检查魔数。确认为 Dubbo 协议栈。
         if (readable > 0 && header[0] != MAGIC_HIGH
                 || readable > 1 && header[1] != MAGIC_LOW) {
             int length = header.length;
@@ -111,14 +132,18 @@ public class ExchangeCodec extends TelnetCodec {
             return super.decode(channel, buffer, readable, header);
         }
         // check length.
+
+        // 检查是否读取一个完整的 dubbo 协议
         if (readable < HEADER_LENGTH) {
             return DecodeResult.NEED_MORE_INPUT;
         }
 
         // get data length.
+        // 从协议头中， 读取 数据长度。
         int len = Bytes.bytes2int(header, 12);
         checkPayload(channel, len);
 
+        //  遇到 半包直接返回。
         int tt = len + HEADER_LENGTH;
         if (readable < tt) {
             return DecodeResult.NEED_MORE_INPUT;
@@ -128,6 +153,10 @@ public class ExchangeCodec extends TelnetCodec {
         ChannelBufferInputStream is = new ChannelBufferInputStream(buffer, len);
 
         try {
+
+            /**
+             *  解析 Dubbo 协议帧数据 {@link #decodeBody(Channel, InputStream, byte[])}
+             */
             return decodeBody(channel, is, header);
         } finally {
             if (is.available() > 0) {
@@ -144,8 +173,12 @@ public class ExchangeCodec extends TelnetCodec {
     }
 
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
+
+        // 解析请求类型，和消费序列化的类型。
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
         // get request id.
+
+        // 解析请求ID
         long id = Bytes.bytes2long(header, 4);
         if ((flag & FLAG_REQUEST) == 0) {
             // decode response.
@@ -156,15 +189,29 @@ public class ExchangeCodec extends TelnetCodec {
             // get status.
             byte status = header[3];
             res.setStatus(status);
+
+            // 使用消费端序列化一致的反序列化类型对数据部分进行解码。
             try {
                 ObjectInput in = CodecSupport.deserialize(channel.getUrl(), is, proto);
                 if (status == Response.OK) {
                     Object data;
+
+                    /**
+                     * 解析心跳数据。
+                     */
                     if (res.isHeartbeat()) {
                         data = decodeHeartbeatData(channel, in);
                     } else if (res.isEvent()) {
+
+                        /**
+                         * 解析事件
+                         */
                         data = decodeEventData(channel, in);
                     } else {
+
+                        /**
+                         * 解析响应信息
+                         */
                         data = decodeResponseData(channel, in, getRequestData(id));
                     }
                     res.setResult(data);

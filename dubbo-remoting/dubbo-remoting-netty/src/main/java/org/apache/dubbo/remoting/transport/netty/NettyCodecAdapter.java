@@ -83,7 +83,7 @@ final class NettyCodecAdapter {
             try {
 
                 /**
-                 * 核心处理 {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#encode(org.apache.dubbo.remoting.Channel, org.apache.dubbo.remoting.buffer.ChannelBuffer, Object)}
+                 * 核心编码 {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#encode(org.apache.dubbo.remoting.Channel, org.apache.dubbo.remoting.buffer.ChannelBuffer, Object)}
                  */
                 codec.encode(channel, buffer, msg);
             } finally {

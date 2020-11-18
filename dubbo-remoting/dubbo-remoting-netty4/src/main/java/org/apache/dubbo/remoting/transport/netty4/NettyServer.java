@@ -102,7 +102,12 @@ public class NettyServer extends AbstractServer implements Server {
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         // FIXME: should we use getTimeout()?
 
-                        // 添加 handler 到接收连接的管线。
+                        /**
+                         * 添加 handler 到接收连接的管线。
+                         *
+                         *  解码: decoder {@link NettyCodecAdapter#decoder}
+                         *  编码: encoder {@link NettyCodecAdapter#encoder
+                         */
                         int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
                         NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
                         ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug

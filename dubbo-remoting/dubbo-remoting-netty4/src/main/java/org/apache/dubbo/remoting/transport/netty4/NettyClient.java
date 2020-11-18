@@ -104,6 +104,9 @@ public class NettyClient extends AbstractClient {
                 /**
                  *  获取编解码器 {@link AbstractEndpoint#getCodec()}
                  *  `NettyCodecAdapter` 适配器，把编解码设置到链接 Channel 的管线中。
+                 *
+                 *   解码: decoder {@link NettyCodecAdapter#decoder}
+                 *   编码: encoder {@link NettyCodecAdapter#encoder
                  */
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
                 ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
