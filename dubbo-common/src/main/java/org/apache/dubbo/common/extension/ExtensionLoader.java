@@ -78,6 +78,9 @@ public class ExtensionLoader<T> {
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
+    /**
+     * 用于缓存，所有扩展加载实例。
+     */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
 
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
@@ -90,6 +93,11 @@ public class ExtensionLoader<T> {
 
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
 
+    /**
+     * 则获取class上的 `SPI` 注解，根据该注解的定义的name作为key
+     *
+     *  1、例如: DubboProtocol （没有Adaptive注解，同时只有无参构造器）
+     */
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
@@ -99,10 +107,21 @@ public class ExtensionLoader<T> {
      * 缓存适配器实例。
      */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
+
+    /**
+     * 如果这个class含有 `Adaptive` 注解，则将 class 设置 为。
+     *
+     *  1、例如: AdaptiveCompiler (如果这个class含有Adaptive注解)
+     */
     private volatile Class<?> cachedAdaptiveClass = null;
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
 
+    /**
+     * 尝试获取带对应接口参数的 `构造器`，如果能够获取到，则说明这个class是一个装饰类即，需要存到
+     *
+     *  1、例如: ProtocolListenerWrapper 构造函数，入参是 `Protocol`。
+     */
     private Set<Class<?>> cachedWrapperClasses;
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
@@ -148,6 +167,8 @@ public class ExtensionLoader<T> {
 
             /**
              * {@link ExtensionLoader#ExtensionLoader(Class)}
+             *
+             *  `EXTENSION_LOADERS` 用于缓存所有的扩展加载实例。
              */
             EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<T>(type));
             loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
@@ -600,7 +621,10 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
-        // 根据 name 查找对应扩展实现的 Class 对象。
+        /**
+         * 根据 name 查找对应扩展实现的 Class 对象。
+         *  {@link #getExtensionClasses()}
+         */
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name);
@@ -610,12 +634,14 @@ public class ExtensionLoader<T> {
             // 如果缓存中不存在实例，则使用 Class 创建实例。
             T instance = (T) EXTENSION_INSTANCES.get(clazz);
             if (instance == null) {
+
+                // 创建实例。
                 EXTENSION_INSTANCES.putIfAbsent(clazz, clazz.newInstance());
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
 
             /**
-             * IOC 依赖注入 {@link #injectExtension(Object)}
+             *  依赖注入 {@link #injectExtension(Object)}
              */
             injectExtension(instance);
 
@@ -623,6 +649,10 @@ public class ExtensionLoader<T> {
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
             if (CollectionUtils.isNotEmpty(wrapperClasses)) {
                 for (Class<?> wrapperClass : wrapperClasses) {
+
+                    /**
+                     * {@link #injectExtension(Object)}
+                     */
                     instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                 }
             }
@@ -634,7 +664,12 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 注入适配器依赖的其他扩展点
+     * 注入适配器依赖的其他扩展点 【依赖注入】
+     *
+     *   重点：
+     *      一个接口会存在多个实现类, 并不去注入一个具体的实现者,
+     *          而是注入一个动态生成的实现者，这个动态生成的实现者的逻辑是确定的，能够根据不同的参数来使用不同的实现者实现相应的方法。
+     *          这个动态生成的实现者的 class就是ExtensionLoader的Class<?> cachedAdaptiveClass
      * @param instance
      * @return
      */
@@ -644,6 +679,11 @@ public class ExtensionLoader<T> {
 
                 // 遍历扩展点实现类的所有方法。
                 for (Method method : instance.getClass().getMethods()) {
+
+                    /**
+                     * set开头的方法 {@link #isSetter(Method)}
+                     *  方法参数只有一个。
+                     */
                     if (isSetter(method)) {
                         /**
                          * Check {@link DisableInject} to see if we need auto injection for this property
@@ -673,6 +713,10 @@ public class ExtensionLoader<T> {
 
                             // 如果存在反射调用 setter() 方法进行属性注入。
                             if (object != null) {
+
+                                /**
+                                 * 使用反射方式。
+                                 */
                                 method.invoke(instance, object);
                             }
                         } catch (Exception e) {
@@ -705,6 +749,10 @@ public class ExtensionLoader<T> {
      * 2, name starts with "set"
      * <p>
      * 3, only has one parameter
+     *
+     *  set 开头，
+     *  方法参数只有一个
+     *  方法必须是public
      */
     private boolean isSetter(Method method) {
         return method.getName().startsWith("set")
@@ -727,6 +775,10 @@ public class ExtensionLoader<T> {
      * @return
      */
     private Map<String, Class<?>> getExtensionClasses() {
+
+        /**
+         * cachedClasses 存储，`SPI 注解` Key: SPI 注解中的 `value`
+         */
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
             synchronized (cachedClasses) {
@@ -888,7 +940,7 @@ public class ExtensionLoader<T> {
         } else if (isWrapperClass(clazz)) {
 
             /**
-             * {@link #cacheWrapperClass(Class)}
+             *  添加到 cacheWrapperClass 中 {@link #cacheWrapperClass(Class)}
              */
             cacheWrapperClass(clazz);
         } else {
