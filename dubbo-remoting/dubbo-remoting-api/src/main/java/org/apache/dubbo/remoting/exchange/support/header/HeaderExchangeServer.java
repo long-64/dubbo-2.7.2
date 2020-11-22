@@ -64,6 +64,11 @@ public class HeaderExchangeServer implements ExchangeServer {
     public HeaderExchangeServer(Server server) {
         Assert.notNull(server, "server == null");
         this.server = server;
+
+        /**
+         * 这是一个心跳定时器，采用了线程池，如果断开就心跳重连
+         *
+         */
         startIdleCheckTask(getUrl());
     }
 

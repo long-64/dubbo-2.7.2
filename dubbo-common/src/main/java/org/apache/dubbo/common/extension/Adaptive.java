@@ -29,6 +29,16 @@ import java.lang.annotation.Target;
  *
  * @see ExtensionLoader
  * @see URL
+ *
+ *
+ *  1、扩展实现类上。
+ *   在类上，表示该类是一个扩展类，不需要生成代理直接用即可
+ *
+ *  2、扩展接口方法上。
+ *   在方法上则表示该方法需生成代理, 此时就需要用到上面提到的 URL 参数
+ *
+ *  3、为什么要设计 Adaptive?
+ *      Adaptive 设计的目的为了识别固定已知类，和扩展未知类。
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

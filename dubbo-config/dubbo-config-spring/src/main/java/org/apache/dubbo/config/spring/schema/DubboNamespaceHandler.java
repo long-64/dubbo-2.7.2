@@ -37,6 +37,8 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
  * DubboNamespaceHandler
  *
  * @export
+ *
+ *  Dubbo 和 Spring 整合。扩展 `Schema`
  */
 public class DubboNamespaceHandler extends NamespaceHandlerSupport {
 
@@ -48,6 +50,10 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport {
     public void init() {
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class, true));
         registerBeanDefinitionParser("module", new DubboBeanDefinitionParser(ModuleConfig.class, true));
+
+        /**
+         * {@link RegistryConfig}
+         */
         registerBeanDefinitionParser("registry", new DubboBeanDefinitionParser(RegistryConfig.class, true));
         registerBeanDefinitionParser("config-center", new DubboBeanDefinitionParser(ConfigCenterBean.class, true));
         registerBeanDefinitionParser("metadata-report", new DubboBeanDefinitionParser(MetadataReportConfig.class, true));

@@ -65,6 +65,9 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
                 return zookeeperClient;
             }
 
+            /**
+             * {@link org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient#CuratorZookeeperClient
+             */
             zookeeperClient = createZookeeperClient(toClientURL(url));
             logger.info("No valid zookeeper client found from cache, therefore create a new client for url. " + url);
             writeToClientMap(addressList, zookeeperClient);

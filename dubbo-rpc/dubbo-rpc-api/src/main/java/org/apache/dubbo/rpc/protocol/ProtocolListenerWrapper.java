@@ -56,6 +56,10 @@ public class ProtocolListenerWrapper implements Protocol {
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+
+            /**
+             *  【 registryProtocol 】  {@link org.apache.dubbo.registry.integration.RegistryProtocol#export(Invoker)}
+             */
             return protocol.export(invoker);
         }
 

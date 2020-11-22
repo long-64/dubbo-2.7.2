@@ -327,6 +327,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         // check && override if necessary
         List<URL> registryList = new ArrayList<URL>();
         if (CollectionUtils.isNotEmpty(registries)) {
+
+            /**
+             * registries  何时注入
+             */
             for (RegistryConfig config : registries) {
                 String address = config.getAddress();
                 if (StringUtils.isEmpty(address)) {

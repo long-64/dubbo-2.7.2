@@ -24,6 +24,45 @@ import org.apache.dubbo.common.extension.SPI;
  * Protocol. (API/SPI, Singleton, ThreadSafe)
  *
  *  远程调用层， 封装 RPC 调用逻辑。
+ *      底层默认使用 Dubbo 协议 `DubboProtocol`
+ *
+ *
+ *
+ *
+ *      1、13个扩展点
+ *      2、2个 Wrapper 包装类。
+ *
+ *
+ *
+ *
+ *  package com.alibaba.dubbo.rpc;
+ *  import com.alibaba.dubbo.common.extension.ExtensionLoader;
+ *
+ *  public class Protocol$Adpative implements com.alibaba.dubbo.rpc.Protocol {
+ *   public void destroy() {throw new UnsupportedOperationException("method public abstract void com.alibaba.dubbo.rpc.Protocol.destroy() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!");
+ *   }
+ *   public int getDefaultPort() {throw new UnsupportedOperationException("method public abstract int com.alibaba.dubbo.rpc.Protocol.getDefaultPort() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!");
+ *   }
+ *
+ *   public com.alibaba.dubbo.rpc.Exporter export(com.alibaba.dubbo.rpc.Invoker arg0) throws com.alibaba.dubbo.rpc.RpcException {
+ *       if (arg0 == null) throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument == null");
+ *       if (arg0.getUrl() == null) throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument getUrl() == null");com.alibaba.dubbo.common.URL url = arg0.getUrl();
+ *       String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+ *       if(extName == null) throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.Protocol) name from url(" + url.toString() + ") use keys([protocol])");
+ *       com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);
+ *       return extension.export(arg0);
+ *   }
+ *
+ *   public com.alibaba.dubbo.rpc.Invoker refer(java.lang.Class arg0, com.alibaba.dubbo.common.URL arg1) throws com.alibaba.dubbo.rpc.RpcException {
+ *       if (arg1 == null) throw new IllegalArgumentException("url == null");
+ *       com.alibaba.dubbo.common.URL url = arg1;
+ *       String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+ *       if(extName == null) throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.Protocol) name from url(" + url.toString() + ") use keys([protocol])");
+ *       com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);
+ *       return extension.refer(arg0, arg1);
+ *   }
+ * }
+ *
  */
 @SPI("dubbo")
 public interface Protocol {
@@ -32,6 +71,8 @@ public interface Protocol {
      * Get default port when user doesn't config the port.
      *
      * @return default port
+     *
+     *  获取缺省端口，当用户没有配置端口时使用
      */
     int getDefaultPort();
 
@@ -47,6 +88,8 @@ public interface Protocol {
      * @param invoker Service invoker
      * @return exporter reference for exported service, useful for unexport the service later
      * @throws RpcException thrown when error occurs during export the service, for example: port is occupied
+     *
+     *  暴露远程服务：
      */
     @Adaptive
     <T> Exporter<T> export(Invoker<T> invoker) throws RpcException;
@@ -65,6 +108,8 @@ public interface Protocol {
      * @param url  URL address for the remote service
      * @return invoker service's local proxy
      * @throws RpcException when there's any error while connecting to the service provider
+     *
+     *  引用远程服务：
      */
     @Adaptive
     <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException;
@@ -74,6 +119,8 @@ public interface Protocol {
      * 1. Cancel all services this protocol exports and refers <br>
      * 2. Release all occupied resources, for example: connection, port, etc. <br>
      * 3. Protocol can continue to export and refer new service even after it's destroyed.
+     *
+     *  释放协议：
      */
     void destroy();
 

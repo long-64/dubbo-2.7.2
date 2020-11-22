@@ -113,8 +113,24 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
         return proxy;
     }
 
+    /**
+     *
+     * @param proxy  接口实现类的引用
+     * @param type  接口
+     * @param url URL 协议（injvm开头 或xxx）
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException {
+
+        /**
+         *
+         *  Dubbo的IOC帮我们注入了包装类需要的实例参数, 可想而知，ProxyFactory: JavassistProxyFactory
+         *
+         * {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
+         */
         return proxyFactory.getInvoker(proxy, type, url);
     }
 

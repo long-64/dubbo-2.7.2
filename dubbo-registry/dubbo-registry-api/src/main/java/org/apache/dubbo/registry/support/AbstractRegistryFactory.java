@@ -84,6 +84,11 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         }
     }
 
+    /**
+     * 获取注册中心
+     * @param url Registry address, is not allowed to be empty
+     * @return
+     */
     @Override
     public Registry getRegistry(URL url) {
         url = URLBuilder.from(url)

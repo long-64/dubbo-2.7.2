@@ -127,6 +127,8 @@ public class ExecutorUtil {
      * append thread name with url address
      *
      * @return new url with updated thread name
+     *
+     *  设置线程名称。
      */
     public static URL setThreadName(URL url, String defaultName) {
         String name = url.getParameter(THREAD_NAME_KEY, defaultName);

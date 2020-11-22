@@ -48,7 +48,9 @@ public class HeaderExchanger implements Exchanger {
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
 
         /**
-         * {@link Transporters#bind(URL, ChannelHandler...)}
+         *  Server {@link Transporters#bind(URL, ChannelHandler...)}
+         *
+         *   `HeaderExchangeServer`  {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeServer
          */
         return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
     }

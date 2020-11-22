@@ -81,7 +81,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (!group.startsWith(PATH_SEPARATOR)) {
             group = PATH_SEPARATOR + group;
         }
+
+        //设置根节点
         this.root = group;
+
+        /**
+         * 创建链接 {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter#connect(URL)}
+         */
         zkClient = zookeeperTransporter.connect(url);
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {

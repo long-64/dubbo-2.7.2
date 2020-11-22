@@ -42,6 +42,10 @@ public class AdaptiveCompiler implements Compiler {
         } else {
             compiler = loader.getDefaultExtension();
         }
+
+        /**
+         * {@link org.apache.dubbo.common.compiler.support.JavassistCompiler#compile(String, ClassLoader)}
+         */
         return compiler.compile(code, classLoader);
     }
 

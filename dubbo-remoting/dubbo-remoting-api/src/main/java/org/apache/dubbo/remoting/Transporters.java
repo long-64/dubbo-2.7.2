@@ -55,6 +55,10 @@ public class Transporters {
         }
 
         /**
+         *
+         *  `getTransporter`
+         *
+         *
          *  都是创建 `NettyServer` 默认走 `Netty-4`
          *
          *  Netty-4 {@link org.apache.dubbo.remoting.transport.netty4.NettyTransporter#bind(URL, ChannelHandler)}

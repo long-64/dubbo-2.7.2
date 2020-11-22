@@ -338,6 +338,10 @@ public class DubboProtocol extends AbstractProtocol {
 
         // export service.
         String key = serviceKey(url);
+
+        /**
+         * invoker 转 Exporter {@link DubboExporter#DubboExporter(Invoker, String, Map)}
+         */
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
         exporterMap.put(key, exporter);
 
@@ -366,6 +370,10 @@ public class DubboProtocol extends AbstractProtocol {
         return exporter;
     }
 
+    /**
+     * 启动 Netty 服务。
+     * @param url
+     */
     private void openServer(URL url) {
         // find server.
 
@@ -373,7 +381,7 @@ public class DubboProtocol extends AbstractProtocol {
         String key = url.getAddress();
         //client can export a service which's only for server to invoke
 
-        // 只有服务提供端才会启动监听
+        // client 也可以暴露一个只有server可以调用的服务。
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
         if (isServer) {
             ExchangeServer server = serverMap.get(key);
@@ -398,8 +406,12 @@ public class DubboProtocol extends AbstractProtocol {
     private ExchangeServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default
+
+                //默认开启server关闭时发送readonly事件
                 .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())
                 // enable heartbeat by default
+
+                //默认开启heartbeat
                 .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))
                 .addParameter(CODEC_KEY, DubboCodec.NAME)
                 .build();

@@ -56,6 +56,7 @@ import static org.apache.dubbo.config.spring.util.BeanFactoryUtils.addApplicatio
 /**
  * ServiceFactoryBean
  *
+ *  暴露本地服务，入口
  * @export
  */
 public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean, DisposableBean,
@@ -106,6 +107,10 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         return service;
     }
 
+    /**
+     * 实现 `ApplicationListener`
+     * @param event
+     */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (!isExported() && !isUnexported()) {

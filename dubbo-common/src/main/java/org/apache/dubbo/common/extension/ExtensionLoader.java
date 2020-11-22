@@ -83,10 +83,16 @@ public class ExtensionLoader<T> {
      */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
 
+    /**
+     * 扩展实现类集合, key 为 Protocol , value 为 DubboProtocol
+     */
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
 
     // ==============================
 
+    /**
+     * 扩展接口, 比如 Protocol
+     */
     private final Class<?> type;
 
     private final ExtensionFactory objectFactory;
@@ -101,6 +107,10 @@ public class ExtensionLoader<T> {
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
+
+    /**
+     * 缓存的扩展对象集合 key 为 dubbo, value 为 DubboProtocol
+     */
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
 
     /**
@@ -118,6 +128,7 @@ public class ExtensionLoader<T> {
     private volatile Throwable createAdaptiveInstanceError;
 
     /**
+     *  扩展增强 Wrapper 实现类集合
      * 尝试获取带对应接口参数的 `构造器`，如果能够获取到，则说明这个class是一个装饰类即，需要存到
      *
      *  1、例如: ProtocolListenerWrapper 构造函数，入参是 `Protocol`。
@@ -132,6 +143,8 @@ public class ExtensionLoader<T> {
         /**
          *  根据 Class 获取 `ExtensionLoader`  {@link #getExtensionLoader(Class)}
          *  获取当前扩展接口对应的适配器对象。 {@link #getAdaptiveExtension()}
+         *
+         *   如果 type == ExtensionFactory, 那么 objectFactory 为 null。
          */
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
@@ -145,7 +158,7 @@ public class ExtensionLoader<T> {
      *
      *   【 Dubbo 每个扩展接口，对应着自己的ExtensionLoader对象 】
      *
-     * @param type
+     * @param type 例如: Protocol。
      * @param <T>
      * @return
      */
@@ -162,6 +175,7 @@ public class ExtensionLoader<T> {
                     ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
         }
 
+        // 从缓存中获取一个 为null，则去 new ExtensionLoader
         ExtensionLoader<T> loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         if (loader == null) {
 
@@ -414,19 +428,23 @@ public class ExtensionLoader<T> {
         }
 
         /**
-         * 根据 name 获取实例 {@link #getOrCreateHolder(String)}
+         * 根据 name 从缓存的扩展类对象获取 {@link #getOrCreateHolder(String)}
          */
         Holder<Object> holder = getOrCreateHolder(name);
         Object instance = holder.get();
+
+        // 缓存中没有对应的实例
         if (instance == null) {
             synchronized (holder) {
                 instance = holder.get();
                 if (instance == null) {
 
                     /**
-                     * 不存在则创建 {@link #createExtension(String)}
+                     * 加载扩展实现类,并实例化 {@link #createExtension(String)}
                      */
                     instance = createExtension(name);
+
+                    // 扩展对象放入缓存
                     holder.set(instance);
                 }
             }
@@ -622,7 +640,9 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
         /**
-         * 根据 name 查找对应扩展实现的 Class 对象。
+         * 通过 name获取ExtensionClasses。
+         *
+         *   例如：name: Protocol.  clazz: DubboProtocol
          *  {@link #getExtensionClasses()}
          */
         Class<?> clazz = getExtensionClasses().get(name);
@@ -641,7 +661,8 @@ public class ExtensionLoader<T> {
             }
 
             /**
-             *  依赖注入 {@link #injectExtension(Object)}
+             *  dubbo的IOC反转控制，就是从spi和spring里面提取对象赋值。
+             *  注入依赖的扩展类对象 {@link #injectExtension(Object)}
              */
             injectExtension(instance);
 
@@ -651,7 +672,9 @@ public class ExtensionLoader<T> {
                 for (Class<?> wrapperClass : wrapperClasses) {
 
                     /**
-                     * {@link #injectExtension(Object)}
+                     *  重新赋值成一个 wrapper （增强类）
+                     *
+                     *  注入依赖的扩展类对象 {@link #injectExtension(Object)}
                      */
                     instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                 }
@@ -707,7 +730,8 @@ public class ExtensionLoader<T> {
                             String property = getSetterProperty(method);
 
                             /**
-                             *  返回使用 Wrapper 增强后的扩展点 {@link #getExtension(String)}
+                             *  【 TODO 不清楚调用关系 】
+                             *  从objectFactory 中获取所需要注入的实例 {@link #getExtension(String)}
                              */
                             Object object = objectFactory.getExtension(pt, property);
 
@@ -780,13 +804,22 @@ public class ExtensionLoader<T> {
          * cachedClasses 存储，`SPI 注解` Key: SPI 注解中的 `value`
          */
         Map<String, Class<?>> classes = cachedClasses.get();
+
+        // 依然是双重校验+锁的方法去获取
         if (classes == null) {
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
 
                     /**
-                     *  【核心实现】{@link #loadExtensionClasses()}
+                     *
+                     *  缓存没有命中, 就会去加载
+                     *      META-INF/dubbo ,
+                     *      META-INF/dubbo/intenal,   ,
+                     *      META-INF/service
+                     *    目录下去加载
+                     *
+                     *   加载 {@link #loadExtensionClasses()}
                      */
                     classes = loadExtensionClasses();
                     cachedClasses.set(classes);
@@ -808,7 +841,18 @@ public class ExtensionLoader<T> {
         Map<String, Class<?>> extensionClasses = new HashMap<>();
 
         /**
-         *   {@link #loadDirectory(Map, String, String)}
+         *  从指定目录下加载 {@link #loadDirectory(Map, String, String)}
+         *
+         *  type: 扩展接口:
+         *      第一个是 `ExtensionFactory` 在 {@link ExtensionLoader#ExtensionLoader(Class)}
+         *          1、最终返回2个类。
+         *                  {@link org.apache.dubbo.config.spring.extension.SpringExtensionFactory}
+         *                  {@link org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
+         *          2、 [ AdaptiveExtensionFactory ] {@link org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
+         *              因为类上有@Adaptive注解，直接被缓存在 {@link #cachedAdaptiveClass}
+         *
+         *      例如 Protocol。
+         *
          */
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace("org.apache", "com.alibaba"));
@@ -854,6 +898,11 @@ public class ExtensionLoader<T> {
      * @param type
      */
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir, String type) {
+
+        /**
+         * 文件名字:
+         *     例如: META-INF/dubbo/Protocol
+         */
         String fileName = dir + type;
         try {
             Enumeration<java.net.URL> urls;
@@ -936,11 +985,13 @@ public class ExtensionLoader<T> {
 
             /**
              * 如果是 Wrapper 类 {@link #isWrapperClass(Class)}
+             *
+             *  如果 clazz 的构造函数参数 type 类型，则说明是 Wrapper 类
              */
         } else if (isWrapperClass(clazz)) {
 
             /**
-             *  添加到 cacheWrapperClass 中 {@link #cacheWrapperClass(Class)}
+             *  添加到 `cacheWrapperClass` 中 {@link #cacheWrapperClass(Class)}
              */
             cacheWrapperClass(clazz);
         } else {
@@ -959,6 +1010,10 @@ public class ExtensionLoader<T> {
                 cacheActivateClass(clazz, names[0]);
                 for (String n : names) {
                     cacheName(clazz, n);
+
+                    /**
+                     *  保存 Extension {@link #saveInExtensionClass(Map, Class, String)}
+                     */
                     saveInExtensionClass(extensionClasses, clazz, name);
                 }
             }
@@ -1080,7 +1135,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 动态生成适配器类的 class 对象。
+     * 获取一个适配器扩展点的类
      * @return
      */
     private Class<?> getAdaptiveExtensionClass() {
@@ -1089,9 +1144,15 @@ public class ExtensionLoader<T> {
          *  获取该扩展接口的所有实现类的Class 对象 {@link #getExtensionClasses()}
          */
         getExtensionClasses();
+
+        // 如果 cachedAdaptiveClass 不为空，那么就返回 cachedAdaptiveClass。
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
+
+        /**
+         * 创建适配器类 {@link #createAdaptiveExtensionClass()}
+         */
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
@@ -1104,16 +1165,25 @@ public class ExtensionLoader<T> {
     private Class<?> createAdaptiveExtensionClass() {
 
         /**
-         *  {@link AdaptiveClassCodeGenerator#AdaptiveClassCodeGenerator(Class, String)}
-         *  生成字符串代码 {@link AdaptiveClassCodeGenerator#generate()}
+         *   生成字节码文件 {@link AdaptiveClassCodeGenerator#AdaptiveClassCodeGenerator(Class, String)}
+         *  【 TODO 生成字符串代码 】 {@link AdaptiveClassCodeGenerator#generate()}
+         *
+         *   type: 扩展接口，例如: Protocol。
          */
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
+
+        /**
+         * 获得类加载器 {@link #findClassLoader()}
+         */
         ClassLoader classLoader = findClassLoader();
 
         /**
-         *  获取 `Compiler` 实现类 “JavassistCompiler” {@link ExtensionLoader#getExtensionLoader(Class)}
+         *  获取 `Compiler` 实现类 “AdaptiveCompiler” {@link org.apache.dubbo.common.compiler.support.AdaptiveCompiler#compile(String, ClassLoader)}
          *
-         * 【动态编译】根据源文件生成Class 对象 {@link org.apache.dubbo.common.compiler.support.JavassistCompiler#compile(String, ClassLoader)}
+         *  因为 AdaptiveCompiler 有 `@Adaptive` 注解。
+         *      原因是 `getAdaptiveExtensionClass` 中，优先执行 “cachedAdaptiveClass”。
+         *
+         * 【最终，动态编译】根据源文件生成Class 对象 {@link org.apache.dubbo.common.compiler.support.JavassistCompiler#compile(String, ClassLoader)}
          */
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
         return compiler.compile(code, classLoader);

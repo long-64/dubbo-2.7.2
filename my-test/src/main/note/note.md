@@ -6,8 +6,13 @@
 - `Compiler` 默认实现类 `JavassistCompiler` 
 
 
-### 服务提供方
+#### Dubbo、Spring 整合
+- `DubboNamespaceHandler` 扩展 Schema
+
+### 服务提供方 （服务暴露）
 #### 服务提供方入口
+- `ServiceBean` 实现 `ApplicationListener` 接口。
+    - 兼容容器刷新事件 `onApplicationEvent(ContextRefreshedEvent event)`
 - `ServiceConfig # export()`
 - `ServiceConfig # exportLocal()` 本地服务暴露流程。
 

@@ -266,7 +266,9 @@ public class RegistryProtocol implements Protocol {
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
 
             /**
-             * {@link org.apache.dubbo.qos.protocol.QosProtocolWrapper#export(Invoker)}
+             * {@link org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper#export(Invoker)}
+             *
+             * 最终执行 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
              */
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });

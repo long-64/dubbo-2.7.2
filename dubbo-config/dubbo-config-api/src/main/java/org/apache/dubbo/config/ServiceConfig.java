@@ -479,6 +479,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private void doExportUrls() {
 
         /**
+         *
+         *  Dubbo是基于URL来驱动的
+         *
+         *  这里多个 URL, 是因为 Dubbo 支持多个 registry.
+         *
          * 加载所有注册中心对象 {@link #loadRegistries(boolean)}
          */
         List<URL> registryURLs = loadRegistries(true);
@@ -488,13 +493,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             ApplicationModel.initProviderModel(pathKey, providerModel);
 
             /**
-             * {@link #doExportUrlsFor1Protocol(ProtocolConfig, List)}
+             *  将服务发布到注册中心 {@link #doExportUrlsFor1Protocol(ProtocolConfig, List)}
              */
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
     /**
+     *  将服务发布到注册中心。
      *
      *  内部把参数封装为 URL。
      *
@@ -609,6 +615,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         // 拼接 URL 对象。
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
+
+        /**
+         *  构建 URL 对象。
+         */
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -622,14 +632,23 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         String scope = url.getParameter(SCOPE_KEY);
         // don't export when none is configured
 
-        // 如果 scope 为 SCOPE_NODE 则不导出服务。
+        // 如果 scope 为 SCOPE_NODE 不暴露服务。
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
+
+            //配置不是remote的情况下做本地暴露 (配置为remote，则表示只暴露远程服务)
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
+
+                /**
+                 * 暴露本地服务。{@link #exportLocal(URL)}
+                 */
                 exportLocal(url);
             }
+
+
             // export to remote if the config is not local (export to local only when config is local)
+            //如果配置不是local则暴露为远程服务.(配置为local，则表示只暴露本地服务)
             if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
                 if (!isOnlyInJvm() && logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
@@ -657,6 +676,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
+                        /**
+                         *
+                         *  proxyFactory: ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+                         *
+                         *      是一个动态适配器代理类 `ProxyFactory$Adpative` 优先返回 `包装类`
+                         *
+                         *     【 getInvoker 】 {@link org.apache.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper#getInvoker(Object, Class, URL)}
+                         *
+                         */
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
@@ -716,12 +744,19 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 .build();
 
         /**
-         * 导出服务 {@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol#export(Invoker)}
+         *
+         *  Protocol extension = (Protocol)ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("injvm")
+         *  返回的
+         *      {@link org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper#export(Invoker)}
+         *
+         *  【 最终执行 】 {@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol#export(Invoker)}
          */
         Exporter<?> exporter = protocol.export(
                 proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
 
-        // 保存导出服务到列表
+        /**
+         * 保存导出服务到列表 【 完成 】
+         */
         exporters.add(exporter);
         logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
     }
