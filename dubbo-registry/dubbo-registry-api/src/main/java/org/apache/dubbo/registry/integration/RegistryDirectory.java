@@ -278,6 +278,13 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
      * </ol>
      *
      * @param invokerUrls this parameter can't be null
+     *
+     *
+     *   根据 invokerURL 列表转换为 Invoker 列表，转换规则如下
+     *   1、如果 URL 已经被转换 Invoker，则不在重新引用，直接从缓存中获取，主要如果没有 URL中任何一个参数变更，也会重新引用。
+     *   2、如果 传入 Invoker 列表不为空，则表示最新 Invoker 列表。
+     *   3、如果传入 InvokerUrl 列表是空，则表示只是下发 ovveride 规则或 route 规则。需要重新交叉对比，决定是否需要重新引用。
+     *
      */
     // TODO: 2017/8/31 FIXME The thread pool should be used to refresh the address, otherwise the task may be accumulated.
     private void refreshInvoker(List<URL> invokerUrls) {
@@ -287,6 +294,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         if (invokerUrls.size() == 1
                 && invokerUrls.get(0) != null
                 && EMPTY_PROTOCOL.equals(invokerUrls.get(0).getProtocol())) {
+
+            // 禁止访问
             this.forbidden = true; // Forbid to access
             this.invokers = Collections.emptyList();
             routerChain.setInvokers(this.invokers);
@@ -296,6 +305,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
              */
             destroyAllInvokers(); // Close all invokers
         } else {
+
+            // 允许访问。
             this.forbidden = false; // Allow to access
             Map<String, Invoker<T>> oldUrlInvokerMap = this.urlInvokerMap; // local reference
             if (invokerUrls == Collections.<URL>emptyList()) {
@@ -305,6 +316,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 invokerUrls.addAll(this.cachedInvokerUrls);
             } else {
                 this.cachedInvokerUrls = new HashSet<>();
+
+                // 缓存 invokerUrls 列表，便于交叉对比。
                 this.cachedInvokerUrls.addAll(invokerUrls);//Cached invoker urls, convenient for comparison
             }
             if (invokerUrls.isEmpty()) {

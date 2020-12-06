@@ -69,6 +69,10 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
+
+        /**
+         * {@link org.apache.dubbo.rpc.proxy.AbstractProxyFactory#getProxy(Invoker)}
+         */
         T proxy = proxyFactory.getProxy(invoker);
         if (GenericService.class != invoker.getInterface()) {
             URL url = invoker.getUrl();

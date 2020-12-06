@@ -241,7 +241,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     }
 
     /**
-     * 服务消费方，入口
+     * 服务消费方（服务引用），入口
      * 方法返回，一个代理类，并且方法拦截器为
      *      {@link org.apache.dubbo.rpc.proxy.InvokerInvocationHandler}
      * @return
@@ -430,6 +430,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
                 /**
                  *  实际上调用 Protocol$Adaptive # refer 最终调用 {@link org.apache.dubbo.registry.integration.RegistryProtocol#refer(Class, URL)}
+                 *
+                 *   invoker = FailoverClusterInvoker。
                  */
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
@@ -470,7 +472,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         }
         // create service proxy
 
-        // 创建服务代理。
+        /**
+         * 创建服务代理。{@link org.apache.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper#getProxy(Invoker)}
+         */
         return (T) PROXY_FACTORY.getProxy(invoker);
     }
 

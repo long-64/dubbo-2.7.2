@@ -74,8 +74,16 @@ public class ProtocolListenerWrapper implements Protocol {
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
+
+            /**
+             * 【 registryProtocol 】 {@link org.apache.dubbo.registry.integration.RegistryProtocol#refer(Class, URL)}
+             */
             return protocol.refer(type, url);
         }
+
+        /**
+         * {@link ProtocolFilterWrapper#refer(Class, URL)}
+         */
         return new ListenerInvokerWrapper<T>(protocol.refer(type, url),
                 Collections.unmodifiableList(
                         ExtensionLoader.getExtensionLoader(InvokerListener.class)

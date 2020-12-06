@@ -65,6 +65,9 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
             interfaces[len] = com.alibaba.dubbo.rpc.service.GenericService.class;
         }
 
+        /**
+         *  「 getProxy 」{@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getProxy(Invoker, Class[])}
+         */
         return getProxy(invoker, interfaces);
     }
 

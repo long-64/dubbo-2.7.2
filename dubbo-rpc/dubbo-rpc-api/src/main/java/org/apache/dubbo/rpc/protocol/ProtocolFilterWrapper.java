@@ -170,7 +170,7 @@ public class ProtocolFilterWrapper implements Protocol {
         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
 
             /**
-             * {@link org.apache.dubbo.registry.integration.RegistryProtocol#refer(Class, URL)}
+             * {@link ProtocolListenerWrapper#refer(Class, URL)}
              */
             return protocol.refer(type, url);
         }

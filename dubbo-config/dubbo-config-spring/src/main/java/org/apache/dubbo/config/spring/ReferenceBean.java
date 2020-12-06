@@ -70,6 +70,10 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
 
     @Override
     public Object getObject() {
+
+        /**
+         * {@link #get()}
+         */
         return get();
     }
 
@@ -84,6 +88,10 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         return true;
     }
 
+    /**
+     *  初始化bean 的时候执行，也是 `服务引用`的入口。
+     * @throws Exception
+     */
     @Override
     @SuppressWarnings({"unchecked"})
     public void afterPropertiesSet() throws Exception {
@@ -235,6 +243,10 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         }
 
         if (shouldInit()) {
+
+            /**
+             *  核心 {@link #getObject()}
+             */
             getObject();
         }
     }

@@ -41,6 +41,7 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Configurator;
 import org.apache.dubbo.rpc.cluster.Directory;
+import org.apache.dubbo.rpc.cluster.support.FailoverCluster;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.protocol.InvokerWrapper;
 
@@ -404,12 +405,22 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+
+        // 构建 URL。
         url = URLBuilder.from(url)
                 .setProtocol(url.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY))
                 .removeParameter(REGISTRY_KEY)
                 .build();
+
+        /**
+         *  获取 Registry {@link org.apache.dubbo.registry.support.AbstractRegistryFactory#getRegistry(URL)}
+         */
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {
+
+            /**
+             *  getInvoker {@link org.apache.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper#getInvoker(Object, Class, URL)}
+             */
             return proxyFactory.getInvoker((T) registry, type, url);
         }
 
@@ -440,6 +451,10 @@ public class RegistryProtocol implements Protocol {
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
         if (!ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true)) {
+
+            /**
+             *  {@link #getRegisteredConsumerUrl(URL, URL)}
+             */
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
             registry.register(directory.getRegisteredConsumerUrl());
         }
@@ -454,7 +469,11 @@ public class RegistryProtocol implements Protocol {
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
         /**
-         *  使用集群容错扩展将 Dubbo 协议的 Invoker 客户端转换为需要的接口 {@link org.apache.dubbo.rpc.cluster.support.FailoverCluster#join(Directory)}
+         *
+         *  【 mockClusterWrapper 】{@link org.apache.dubbo.rpc.cluster.support.wrapper.MockClusterWrapper#join(Directory)}
+         *
+         *
+         *  使用集群容错扩展将 Dubbo 协议的 Invoker 客户端转换为需要的接口 {@link FailoverCluster#join(Directory)}
          */
         Invoker invoker = cluster.join(directory);
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
