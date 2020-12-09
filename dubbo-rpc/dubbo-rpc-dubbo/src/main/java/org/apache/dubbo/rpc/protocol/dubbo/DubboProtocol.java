@@ -137,7 +137,7 @@ public class DubboProtocol extends AbstractProtocol {
             Invocation inv = (Invocation) message;
 
             /**
-             * 调用对应 Invoker
+             *  获取调用方对应的 Invoker
              */
             Invoker<?> invoker = getInvoker(channel, inv);
             // need to consider backward-compatibility if it's a callback
@@ -183,6 +183,10 @@ public class DubboProtocol extends AbstractProtocol {
         @Override
         public void received(Channel channel, Object message) throws RemotingException {
             if (message instanceof Invocation) {
+
+                /**
+                 *  【 reply 】 {@link #reply(ExchangeChannel, Object)}
+                 */
                 reply((ExchangeChannel) channel, message);
 
             } else {
@@ -194,6 +198,12 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
+        /**
+         *  Dubbo 服务端提供方，如何处理请求（Netty # connected）
+         *
+         * @param channel
+         * @throws RemotingException
+         */
         @Override
         public void connected(Channel channel) throws RemotingException {
 
@@ -403,6 +413,11 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    /**
+     * 每台机器的 ip + port 是唯一的，所以多个不同服务启动时，第一个会被创建，后面服务直接从缓存中获取。
+     * @param url
+     * @return
+     */
     private ExchangeServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default
@@ -425,7 +440,7 @@ public class DubboProtocol extends AbstractProtocol {
         try {
 
             /**
-             *  {@link Exchangers#bind(URL, ExchangeHandler)}
+             *  【 核心 】{@link Exchangers#bind(URL, ExchangeHandler)}
              */
             server = Exchangers.bind(url, requestHandler);
         } catch (RemotingException e) {

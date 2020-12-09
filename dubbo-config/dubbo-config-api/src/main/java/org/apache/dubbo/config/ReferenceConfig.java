@@ -429,6 +429,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             if (urls.size() == 1) {
 
                 /**
+                 *
+                 *  RegistryProtocol 被 QosProtocolWrapper、ProtocolFilterWrapper、ProtocolListenerWrapper 三个Wrapper 类增强，所以这里经过一层层调用后，最后调用到 `RegistryProtocol`
+                 *
                  *  实际上调用 Protocol$Adaptive # refer 最终调用 {@link org.apache.dubbo.registry.integration.RegistryProtocol#refer(Class, URL)}
                  *
                  *   invoker = FailoverClusterInvoker。
@@ -449,6 +452,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     // The invoker wrap relation would be: RegistryAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, will execute route) -> Invoker
                     invoker = CLUSTER.join(new StaticDirectory(u, invokers));
                 } else { // not a registry url, must be direct invoke.
+
+                    /**
+                     * 容灾机制
+                     */
                     invoker = CLUSTER.join(new StaticDirectory(invokers));
                 }
             }

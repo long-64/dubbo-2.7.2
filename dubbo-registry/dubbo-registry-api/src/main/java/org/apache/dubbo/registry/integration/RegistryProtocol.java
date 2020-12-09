@@ -472,7 +472,7 @@ public class RegistryProtocol implements Protocol {
          *
          *  【 mockClusterWrapper 】{@link org.apache.dubbo.rpc.cluster.support.wrapper.MockClusterWrapper#join(Directory)}
          *
-         *
+         * 【 容错机制 】
          *  使用集群容错扩展将 Dubbo 协议的 Invoker 客户端转换为需要的接口 {@link FailoverCluster#join(Directory)}
          */
         Invoker invoker = cluster.join(directory);

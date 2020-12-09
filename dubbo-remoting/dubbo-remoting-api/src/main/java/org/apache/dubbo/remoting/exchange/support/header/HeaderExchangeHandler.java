@@ -101,9 +101,11 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         try {
 
             /**
-             *  {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler} `reply`
+             *   调用 DubboProtocol  {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler} `reply`
              */
             CompletionStage<Object> future = handler.reply(channel, msg);
+
+            // 否则等返回结果后一步调用回调。
             future.whenComplete((appResult, t) -> {
                 try {
                     if (t == null) {

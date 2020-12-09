@@ -322,6 +322,8 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      *
      * @param provider whether it is the provider side
      * @return
+     *
+     *  加载所有服务注册中心对象。在Dubbo 一个服务可以注册到多个服务注册中心。
      */
     protected List<URL> loadRegistries(boolean provider) {
         // check && override if necessary
@@ -348,6 +350,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
                     for (URL url : urls) {
+
+                        /**
+                         *  把所有参数封装到一个 URL里。
+                         */
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(REGISTRY_PROTOCOL)

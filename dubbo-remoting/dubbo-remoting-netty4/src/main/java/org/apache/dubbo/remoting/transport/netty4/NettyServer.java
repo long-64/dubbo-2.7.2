@@ -111,10 +111,11 @@ public class NettyServer extends AbstractServer implements Server {
                         int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
                         NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
                         ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                                .addLast("decoder", adapter.getDecoder())
-                                .addLast("encoder", adapter.getEncoder())
+                                .addLast("decoder", adapter.getDecoder())  // 解码器
+                                .addLast("encoder", adapter.getEncoder())  // 编码器
+                                // 心跳 handler。
                                 .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
-                                // 心跳检查 handler。
+                                // 业务handler。
                                 .addLast("handler", nettyServerHandler);
                     }
                 });

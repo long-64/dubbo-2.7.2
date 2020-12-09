@@ -482,7 +482,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
          *
          *  Dubbo是基于URL来驱动的
          *
-         *  这里多个 URL, 是因为 Dubbo 支持多个 registry.
+         *  这里多个 URL, 是因为 Dubbo 支持多个 registry.（一个服务可以被注册到多个服务注册中心）
          *
          * 加载所有注册中心对象 {@link #loadRegistries(boolean)}
          */
@@ -688,6 +688,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        /**
+                         * 跟下面 `protocol.export()` 逻辑一致。
+                         *  【 QosProtocolWrapper 】 {@link org.apache.dubbo.qos.protocol.QosProtocolWrapper#export(Invoker)}
+                         */
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);
                     }
