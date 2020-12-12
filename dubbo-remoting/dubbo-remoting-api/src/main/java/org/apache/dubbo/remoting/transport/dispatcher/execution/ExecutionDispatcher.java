@@ -33,7 +33,7 @@ public class ExecutionDispatcher implements Dispatcher {
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
 
         /**
-         * {@link ExecutionChannelHandler#ExecutionChannelHandler(ChannelHandler, URL)}
+         *  core {@link ExecutionChannelHandler#ExecutionChannelHandler(ChannelHandler, URL)}
          */
         return new ExecutionChannelHandler(handler, url);
     }

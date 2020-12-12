@@ -110,12 +110,12 @@ public class ChannelEventRunnable implements Runnable {
     public enum ChannelState {
 
         /**
-         * CONNECTED
+         * CONNECTED （链接）
          */
         CONNECTED,
 
         /**
-         * DISCONNECTED
+         * DISCONNECTED （断开）
          */
         DISCONNECTED,
 
@@ -125,12 +125,12 @@ public class ChannelEventRunnable implements Runnable {
         SENT,
 
         /**
-         * RECEIVED
+         * RECEIVED （请求）
          */
         RECEIVED,
 
         /**
-         * CAUGHT
+         * CAUGHT （异常）
          */
         CAUGHT
     }

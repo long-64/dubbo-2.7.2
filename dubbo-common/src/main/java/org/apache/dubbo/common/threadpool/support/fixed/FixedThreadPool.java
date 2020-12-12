@@ -57,6 +57,9 @@ public class FixedThreadPool implements ThreadPool {
 
         /**
          * 使用 JDK JUC 包 ThreadPoolExecutor 创建线程池。
+         *
+         *  如果 queues = 0，使用一个 SynchronousQueue （阻塞队列）
+         *   queues < 0 则使用 LinkedBlockingQueue （无界阻塞队列）
          */
         return new ThreadPoolExecutor(threads, threads, 0, TimeUnit.MILLISECONDS,
                 queues == 0 ? new SynchronousQueue<Runnable>() :

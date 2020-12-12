@@ -52,7 +52,8 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
         this.url = url;
 
         /**
-         * 获取线程池策略。默认（fixed）: {@link org.apache.dubbo.common.threadpool.support.fixed.FixedThreadPool
+         * 获取线程池策略。
+         *  默认（fixed）: {@link org.apache.dubbo.common.threadpool.support.fixed.FixedThreadPool
          */
         executor = (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
 

@@ -30,6 +30,9 @@ import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
+/**
+ * All 线程模型，（全部派发给业务线程处理。）
+ */
 public class AllChannelHandler extends WrappedChannelHandler {
 
     public AllChannelHandler(ChannelHandler handler, URL url) {
@@ -47,6 +50,10 @@ public class AllChannelHandler extends WrappedChannelHandler {
      */
     @Override
     public void connected(Channel channel) throws RemotingException {
+
+        /**
+         *  {@link #getExecutorService()}
+         */
         ExecutorService executor = getExecutorService();
         try {
 

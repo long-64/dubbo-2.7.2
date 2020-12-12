@@ -33,7 +33,7 @@ public class ChannelHandlers {
     public static ChannelHandler wrap(ChannelHandler handler, URL url) {
 
         /**
-         *  {@link ChannelHandlers#wrapInternal(ChannelHandler, URL)}
+         *   【core】 {@link ChannelHandlers#wrapInternal(ChannelHandler, URL)}
          */
         return ChannelHandlers.getInstance().wrapInternal(handler, url);
     }
@@ -49,7 +49,8 @@ public class ChannelHandlers {
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
 
         /**
-         *  加载具体的线程模型，默认 {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllDispatcher#dispatch(ChannelHandler, URL)}
+         *  加载具体的线程模型，
+         *  默认 {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllDispatcher#dispatch(ChannelHandler, URL)}
          */
         return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url)));

@@ -45,6 +45,10 @@ public class MessageOnlyChannelHandler extends WrappedChannelHandler {
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getExecutorService();
         try {
+
+            /**
+             *  run core {@link ChannelEventRunnable#run()}
+             */
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));
         } catch (Throwable t) {
             throw new ExecutionException(message, channel, getClass() + " error when process received event .", t);

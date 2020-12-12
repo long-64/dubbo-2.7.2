@@ -62,6 +62,8 @@ public class LimitedThreadPool implements ThreadPool {
 
         /**
          * 使用 JUC包 ThreadPoolExecutor 创建线程池
+         *
+         *   空闲线程，不会回收，一直存在。
          */
         return new ThreadPoolExecutor(cores, threads, Long.MAX_VALUE, TimeUnit.MILLISECONDS,
                 queues == 0 ? new SynchronousQueue<Runnable>() :

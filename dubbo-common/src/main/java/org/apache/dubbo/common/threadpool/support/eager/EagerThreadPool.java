@@ -72,7 +72,9 @@ public class EagerThreadPool implements ThreadPool {
         TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queues <= 0 ? 1 : queues);
 
         /**
-         * {@link EagerThreadPoolExecutor#EagerThreadPoolExecutor(int, int, long, TimeUnit, TaskQueue, ThreadFactory, RejectedExecutionHandler)}
+         *  EagerThreadPoolExecutor 和 ThreadPoolExecutor 的区别
+         *
+         *  【core】 {@link EagerThreadPoolExecutor#EagerThreadPoolExecutor(int, int, long, TimeUnit, TaskQueue, ThreadFactory, RejectedExecutionHandler)}
          */
         EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(cores,
                 threads,
@@ -81,6 +83,10 @@ public class EagerThreadPool implements ThreadPool {
                 taskQueue,
                 new NamedInternalThreadFactory(name, true),
                 new AbortPolicyWithReport(name, url));
+
+        /**
+         * {@link TaskQueue#setExecutor(EagerThreadPoolExecutor)}
+         */
         taskQueue.setExecutor(executor);
         return executor;
     }

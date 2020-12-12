@@ -45,7 +45,7 @@ public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
         checkInvokers(invokers, invocation);
 
         /**
-         * 使用负载均衡策略，选择其中一个服务提供者
+         * 使用负载均衡策略，选择其中一个服务提供者 {@link AbstractClusterInvoker#select(LoadBalance, Invocation, List, List)}
          */
         Invoker<T> invoker = select(loadbalance, invocation, invokers, null);
         try {

@@ -35,7 +35,7 @@ import java.util.List;
  * <a href="http://en.wikipedia.org/wiki/Fail-safe">Fail-safe</a>
  *  失败安全
  *
- *   于 {@link FailfastClusterInvoker } 不同的是，失败不会抛出异常。
+ *   于 {@link FailfastClusterInvoker } 不同的是，失败不会抛出异常（忽略异常）
  */
 public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
     private static final Logger logger = LoggerFactory.getLogger(FailsafeClusterInvoker.class);
