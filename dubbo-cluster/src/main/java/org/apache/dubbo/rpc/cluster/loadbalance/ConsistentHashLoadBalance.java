@@ -35,7 +35,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 /**
  * ConsistentHashLoadBalance
  *
- *  一直哈希，负载均衡
+ *  一致哈希，负载均衡
  */
 public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "consistenthash";
@@ -60,9 +60,17 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
         int identityHashCode = System.identityHashCode(invokers);
         ConsistentHashSelector<T> selector = (ConsistentHashSelector<T>) selectors.get(key);
         if (selector == null || selector.identityHashCode != identityHashCode) {
+
+            /**
+             *  {@link ConsistentHashSelector#ConsistentHashSelector(List, String, int)}
+             */
             selectors.put(key, new ConsistentHashSelector<T>(invokers, methodName, identityHashCode));
             selector = (ConsistentHashSelector<T>) selectors.get(key);
         }
+
+        /**
+         *  选择一个服务提供者 {@link ConsistentHashSelector#select(Invocation)}
+         */
         return selector.select(invocation);
     }
 
@@ -94,6 +102,10 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
                     byte[] digest = md5(address + i);
                     for (int h = 0; h < 4; h++) {
                         long m = hash(digest, h);
+
+                        /**
+                         *  维护 hash节点与 Invoker 关系，（使用 TreeMap 为排序）
+                         */
                         virtualInvokers.put(m, invoker);
                     }
                 }

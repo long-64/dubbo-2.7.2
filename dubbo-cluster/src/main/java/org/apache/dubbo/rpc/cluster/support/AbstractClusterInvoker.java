@@ -116,6 +116,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @param selected    exclude selected invokers or not
      * @return the invoker which will final to do invoke.
      * @throws RpcException exception
+     *
+     *  Dubbo 集群容错，依赖 负载均衡器 （LoadBalance）
      */
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {

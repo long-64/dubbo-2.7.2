@@ -48,7 +48,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      */
     static int calculateWarmupWeight(int uptime, int warmup, int weight) {
         int ww = (int) ((float) uptime / ((float) warmup / (float) weight));
-        return ww < 1 ? 1 : (ww > weight ? weight : ww);
+        return ww < 1 ? 1 : (Math.min(ww, weight));
     }
 
     @Override
@@ -104,7 +104,8 @@ public abstract class AbstractLoadBalance implements LoadBalance {
                 }
             }
         }
-        return weight >= 0 ? weight : 0;
+        // 选择最大权重。
+        return Math.max(weight, 0);
     }
 
 }

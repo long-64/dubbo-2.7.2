@@ -30,7 +30,16 @@
  ### 服务消费方
  ##### 服务消费方入口
  - `ReferenceConfig # get()`
- 
+
+
+
+#### 集群容错（Cluster）
+- `FailfastClusterInvoker` 快速失败策略。
+
+
+
+#### 负载均衡（LoadBalance）
+- `RandomLoadBalance` 随机选择
 
 #### 线程模式
 - `Dispatcher 接口` 默认: `AllDispatcher`
