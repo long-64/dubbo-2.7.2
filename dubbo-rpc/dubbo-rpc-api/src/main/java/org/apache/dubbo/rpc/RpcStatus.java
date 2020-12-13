@@ -82,15 +82,20 @@ public class RpcStatus {
 
         /**
          *
-         * METHOD_STATISTICS
-         *  Key：具体方法
-         *  value: 服务接口中所有方法的一个缓存。
+         * METHOD_STATISTICS (并发安全的缓存)
+         *  Key：服务接口
+         *  value: 服务接口中所有方法的缓存。
          */
         ConcurrentMap<String, RpcStatus> map = METHOD_STATISTICS.get(uri);
         if (map == null) {
             METHOD_STATISTICS.putIfAbsent(uri, new ConcurrentHashMap<String, RpcStatus>());
             map = METHOD_STATISTICS.get(uri);
         }
+
+        /*
+         * 获取方法对应的 RpcStatus。
+         *  若没有，则创建一个。
+         */
         RpcStatus status = map.get(methodName);
         if (status == null) {
             map.putIfAbsent(methodName, new RpcStatus());
@@ -129,9 +134,16 @@ public class RpcStatus {
          * 获取对应 RpcStatus
          */
         RpcStatus appStatus = getStatus(url);
+
+        /**
+         * 获取方法对应 RpcStatus {@link #getStatus(URL, String)}
+         */
         RpcStatus methodStatus = getStatus(url, methodName);
 
-        // 原子性递增方法对应激活并发数，若超过最大限制，则返回 false、否则返回 ture.
+        /*
+         * 原子性递增方法对应激活并发数，
+         *  若超过最大限制，则返回 false、否则返回 ture.
+         */
         if (methodStatus.active.incrementAndGet() > max) {
             methodStatus.active.decrementAndGet();
             return false;

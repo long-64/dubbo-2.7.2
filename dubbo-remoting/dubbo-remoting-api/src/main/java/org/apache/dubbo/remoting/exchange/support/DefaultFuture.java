@@ -96,6 +96,8 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
         /**
          * 创建一个任务 {@link TimeoutCheckTask#TimeoutCheckTask(Long)}
+         *
+         *  core function {@link TimeoutCheckTask#run(Timeout)}
          */
         TimeoutCheckTask task = new TimeoutCheckTask(future.getId());
         future.timeoutCheckTask = TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);

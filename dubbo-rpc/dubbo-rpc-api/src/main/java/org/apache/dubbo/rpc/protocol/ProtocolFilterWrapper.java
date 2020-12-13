@@ -29,6 +29,7 @@ import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcException;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_PROTOCOL;
 import static org.apache.dubbo.rpc.Constants.REFERENCE_FILTER_KEY;
@@ -196,6 +197,9 @@ public class ProtocolFilterWrapper implements Protocol {
         public Result invoke(Invocation invocation) throws RpcException {
             Result asyncResult = filterInvoker.invoke(invocation);
 
+            /**
+             *  {@link org.apache.dubbo.rpc.AsyncRpcResult#thenApplyWithContext(Function)}
+             */
             asyncResult.thenApplyWithContext(r -> {
                 for (int i = filters.size() - 1; i >= 0; i--) {
                     Filter filter = filters.get(i);

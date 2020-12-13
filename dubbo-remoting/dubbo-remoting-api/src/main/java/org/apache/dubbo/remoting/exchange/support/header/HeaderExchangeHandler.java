@@ -59,6 +59,10 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     static void handleResponse(Channel channel, Response response) throws RemotingException {
         if (response != null && !response.isHeartbeat()) {
+
+            /**
+             * [core] {@link DefaultFuture#received(Channel, Response)}
+             */
             DefaultFuture.received(channel, response);
         }
     }
@@ -220,8 +224,12 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                     }
                 }
 
-                // 响应
+                // 处理响应
             } else if (message instanceof Response) {
+
+                /**
+                 * 响应 {@link #handleResponse(Channel, Response)}
+                 */
                 handleResponse(channel, (Response) message);
             } else if (message instanceof String) {
                 if (isClientSide(channel)) {
@@ -234,6 +242,8 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                     }
                 }
             } else {
+
+                //
                 handler.received(exchangeChannel, message);
             }
         } finally {

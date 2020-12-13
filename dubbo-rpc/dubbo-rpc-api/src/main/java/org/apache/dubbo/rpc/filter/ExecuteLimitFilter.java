@@ -38,6 +38,11 @@ import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
  *
  *  服务提供端并发控制.
  *
+ *  服务提供方设置并发数后，如果同时请求数超过了设置的executes的值，
+ *   则会抛出异常，而不是像消费端设置actives时那样去等待。
+ *
+ *   备注：服务消费并发控制 {@link ActiveLimitFilter}
+ *
  */
 @Activate(group = CommonConstants.PROVIDER, value = EXECUTES_KEY)
 public class ExecuteLimitFilter extends ListenableFilter {
@@ -64,11 +69,13 @@ public class ExecuteLimitFilter extends ListenableFilter {
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
 
-        // 获取设置 executes 的值，默认：0
+        // 获取设置 executes 的值，默认：0、和最大可用并发数
         int max = url.getMethodParameter(methodName, EXECUTES_KEY, 0);
 
         /**
          * 判断是否超过并发限制 {@link RpcStatus#beginCount(URL, String, int)}
+         *  返回true,说明当前方法的激活并发数没有达到最大值。
+         *   false: 已达最大值。
          */
         if (!RpcStatus.beginCount(url, methodName, max)) {
             throw new RpcException("Failed to invoke method " + invocation.getMethodName() + " in provider " +

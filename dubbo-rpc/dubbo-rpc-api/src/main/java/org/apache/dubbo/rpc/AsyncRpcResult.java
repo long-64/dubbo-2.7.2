@@ -139,6 +139,11 @@ public class AsyncRpcResult extends AbstractResult {
     }
 
     public Result thenApplyWithContext(Function<Result, Result> fn) {
+
+        /**
+         * beforeContext {@link #beforeContext}
+         * afterContext {@link #afterContext}
+         */
         this.thenApply(fn.compose(beforeContext).andThen(afterContext));
         // You may need to return a new Result instance representing the next async stage,
         // like thenApply will return a new CompletableFuture.
@@ -203,6 +208,9 @@ public class AsyncRpcResult extends AbstractResult {
     private RpcContext tmpContext;
     private RpcContext tmpServerContext;
 
+    /**
+     * 以恢复发起远程调用时线程对应的上下文对象，并保存响应线程对应的上下文对象
+     */
     private Function<Result, Result> beforeContext = (appResponse) -> {
         tmpContext = RpcContext.getContext();
         tmpServerContext = RpcContext.getServerContext();
@@ -211,7 +219,15 @@ public class AsyncRpcResult extends AbstractResult {
         return appResponse;
     };
 
+    /**
+     * 以恢复保存的响应线程中的上下文
+     */
     private Function<Result, Result> afterContext = (appResponse) -> {
+
+        /**
+         *  [restoreContext] {@link RpcContext#restoreContext(RpcContext)}
+         * [restoreServerContext] {@link RpcContext#restoreServerContext(RpcContext)}
+         */
         RpcContext.restoreContext(tmpContext);
         RpcContext.restoreServerContext(tmpServerContext);
         return appResponse;

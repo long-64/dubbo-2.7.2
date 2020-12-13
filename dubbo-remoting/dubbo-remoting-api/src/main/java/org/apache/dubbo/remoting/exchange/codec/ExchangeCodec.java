@@ -83,10 +83,16 @@ public class ExchangeCodec extends TelnetCodec {
 
             // 对响应信息进行编码
         } else if (msg instanceof Response) {
+
+            /**
+             * 响应~编码  {@link #encodeResponse(Channel, ChannelBuffer, Response)}
+             */
             encodeResponse(channel, buffer, (Response) msg);
         } else {
 
-            // 对其他信息进行编码
+            /**
+             * 对其他信息进行编码 {@link TelnetCodec#encode(Channel, ChannelBuffer, Object)}
+             */
             super.encode(channel, buffer, msg);
         }
     }
@@ -338,6 +344,13 @@ public class ExchangeCodec extends TelnetCodec {
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH + len);
     }
 
+    /**
+     * 对 响应进行编码。
+     * @param channel
+     * @param buffer
+     * @param res
+     * @throws IOException
+     */
     protected void encodeResponse(Channel channel, ChannelBuffer buffer, Response res) throws IOException {
         int savedWriteIndex = buffer.writerIndex();
         try {

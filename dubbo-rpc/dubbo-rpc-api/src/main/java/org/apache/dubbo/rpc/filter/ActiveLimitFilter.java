@@ -44,6 +44,13 @@ import static org.apache.dubbo.rpc.Constants.ACTIVES_KEY;
  * @see Filter
  *
  *   Dubbo 服务消费端~并发控制
+ *
+ *
+ *    如果当激活并发量达到指定值后，当前客户端请求线程会被挂起。如果在等待超时期间激活并发请求量少了，那么阻塞的线程会被激活，然后发送请求到服务提供方；
+ *    如果等待超时了，则直接抛出异常，这时服务根本就没有发送到服务提供方服务器
+ *
+ *
+ *    备注：服务提供方并发控制 {@link ExecuteLimitFilter}
  */
 @Activate(group = CONSUMER, value = ACTIVES_KEY)
 public class ActiveLimitFilter extends ListenableFilter {
@@ -71,7 +78,7 @@ public class ActiveLimitFilter extends ListenableFilter {
         URL url = invoker.getUrl();
         String methodName = invocation.getMethodName();
 
-        // 获取设置 actives 值，默认是0.
+        // 获取设置 actives 值，默认是0.和最大可用并发数。
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
 
         /**
@@ -95,9 +102,14 @@ public class ActiveLimitFilter extends ListenableFilter {
 
                 /**
                  *   递增方法对应的激活并发数 {@link RpcStatus#beginCount(URL, String, int)}
+                 *   false: 已达最大值。
                  */
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
+
+                        /*
+                         * 将当前线程，挂起 `timeout` 时间
+                         */
                         rpcStatus.wait(remain);
                     } catch (InterruptedException e) {
                         // ignore
@@ -105,7 +117,9 @@ public class ActiveLimitFilter extends ListenableFilter {
                     long elapsed = System.currentTimeMillis() - start;
                     remain = timeout - elapsed;
 
-                    // 超时了还没有被唤醒则抛出异常。
+                    /*
+                     * 超时了还没有被唤醒则抛出异常。
+                     */
                     if (remain <= 0) {
                         throw new RpcException("Waiting concurrent invoke timeout in client-side for service:  " + invoker.getInterface().getName() + ", method: " + invocation.getMethodName() + ", elapsed: " + elapsed + ", timeout: " + timeout + ". concurrent invokes: " + rpcStatus.getActive() + ". max concurrent invoke limit: " + max);
                     }
@@ -115,7 +129,9 @@ public class ActiveLimitFilter extends ListenableFilter {
 
         invocation.setAttachment(ACTIVELIMIT_FILTER_START_TIME, String.valueOf(System.currentTimeMillis()));
 
-        // 向下调用
+        /*
+         * 向下调用
+         */
         return invoker.invoke(invocation);
     }
 

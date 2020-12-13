@@ -88,6 +88,10 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         try {
+
+            /**
+             * {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#received(Channel, Object)}
+             */
             handler.received(channel, msg);
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.channel());
