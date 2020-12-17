@@ -347,6 +347,7 @@ public class DubboProtocol extends AbstractProtocol {
         URL url = invoker.getUrl();
 
         // export service.
+        //  KEY 格式：  ${group}/copm.gupaoedu.practice.dubbo.ISayHelloService:${version}:20880
         String key = serviceKey(url);
 
         /**
@@ -375,6 +376,10 @@ public class DubboProtocol extends AbstractProtocol {
          * 同一机器的不同服务导出只会开启一个 NettyServer {@link #openServer(URL)}
          */
         openServer(url);
+
+        /**
+         * 优化序列化。{@link #optimizeSerialization(URL)}
+         */
         optimizeSerialization(url);
 
         return exporter;
@@ -397,17 +402,21 @@ public class DubboProtocol extends AbstractProtocol {
             ExchangeServer server = serverMap.get(key);
             if (server == null) {
                 synchronized (this) {
+
+                    //是否在serverMap中缓存了
                     server = serverMap.get(key);
                     if (server == null) {
 
                         /**
-                         * 【核心】{@link #createServer(URL)}
+                         * 【核心】创建服务器实例 {@link #createServer(URL)}
                          */
                         serverMap.put(key, createServer(url));
                     }
                 }
             } else {
                 // server supports reset, use together with override
+
+                // 服务器已创建，则根据 url 中的配置重置服务器
                 server.reset(url);
             }
         }
@@ -419,6 +428,8 @@ public class DubboProtocol extends AbstractProtocol {
      * @return
      */
     private ExchangeServer createServer(URL url) {
+
+        //组装url，在url中添加心跳时间、编解码参数
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default
 
@@ -426,7 +437,7 @@ public class DubboProtocol extends AbstractProtocol {
                 .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())
                 // enable heartbeat by default
 
-                //默认开启heartbeat
+                // 启动心跳配置
                 .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))
                 .addParameter(CODEC_KEY, DubboCodec.NAME)
                 .build();

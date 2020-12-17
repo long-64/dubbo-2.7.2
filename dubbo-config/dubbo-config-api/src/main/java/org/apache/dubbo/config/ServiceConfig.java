@@ -484,12 +484,23 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
          *
          *  这里多个 URL, 是因为 Dubbo 支持多个 registry.（一个服务可以被注册到多个服务注册中心）
          *
-         * 加载所有注册中心对象 {@link #loadRegistries(boolean)}
+         * 加载所有配置的注册中心地址 {@link #loadRegistries(boolean)}
+         *
+         *  registry://ip:port/org.apache.dubbo.registry.RegistryService
          */
         List<URL> registryURLs = loadRegistries(true);
+
+        /*
+         * 遍历所有配置的协议，`protocols`
+         */
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
+
             ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
+
+            /**
+             * 用来存储ProviderModel，发布的服务的元数据，后续会用到 {@link ApplicationModel#initProviderModel(String, ProviderModel)}
+             */
             ApplicationModel.initProviderModel(pathKey, providerModel);
 
             /**
@@ -641,7 +652,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
 
                 /**
-                 * 暴露本地服务。{@link #exportLocal(URL)}
+                 * injvm 发布到本地 {@link #exportLocal(URL)}
                  */
                 exportLocal(url);
             }
@@ -754,6 +765,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
          *      {@link org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper#export(Invoker)}
          *
          *  【 最终执行 】 {@link org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol#export(Invoker)}
+         *
+         *   injvm的服务，提供一种消费者和提供者都在一个jvm内的调用方式。使用了 Injvm 协议，是一个伪协议，
+         *      它不开启端口，不发起远程调用，只在JVM内直接关联，(通过集合的方式保存了发布的服务信息)，但执行 Dubbo 的Filter链。
          */
         Exporter<?> exporter = protocol.export(
                 proxyFactory.getInvoker(ref, (Class) interfaceClass, local));

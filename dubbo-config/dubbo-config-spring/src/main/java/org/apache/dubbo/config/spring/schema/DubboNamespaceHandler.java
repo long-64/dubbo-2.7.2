@@ -32,7 +32,9 @@ import org.apache.dubbo.config.spring.ReferenceBean;
 import org.apache.dubbo.config.spring.ServiceBean;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
+import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.w3c.dom.Element;
 
 /**
  * DubboNamespaceHandler
@@ -49,6 +51,12 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport {
 
     @Override
     public void init() {
+
+        /**
+         *  {@link DubboBeanDefinitionParser#parse(Element, ParserContext)} 重写 `parse` 方法
+         *
+         */
+
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class, true));
         registerBeanDefinitionParser("module", new DubboBeanDefinitionParser(ModuleConfig.class, true));
 
@@ -70,7 +78,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport {
         registerBeanDefinitionParser("service", new DubboBeanDefinitionParser(ServiceBean.class, true));
 
         /**
-         * 服务引用
+         * 服务调用 {@link ReferenceBean#getObject()}
          */
         registerBeanDefinitionParser("reference", new DubboBeanDefinitionParser(ReferenceBean.class, false));
         registerBeanDefinitionParser("annotation", new AnnotationBeanDefinitionParser());

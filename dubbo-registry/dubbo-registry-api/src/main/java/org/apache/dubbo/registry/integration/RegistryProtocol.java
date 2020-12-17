@@ -201,8 +201,23 @@ public class RegistryProtocol implements Protocol {
         registry.unregister(registeredProviderUrl);
     }
 
+    /**
+     *
+     * 大致流程:
+     *  1、实现对应协议的服务发布
+     *  2、实现服务注册
+     *  3、订阅服务重写
+     *
+     *
+     * @param originInvoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
+
+        //这里获得的是zookeeper注册中心的url: zookeeper://ip:port
         URL registryUrl = getRegistryUrl(originInvoker);
         // url to export locally
         URL providerUrl = getProviderUrl(originInvoker);
@@ -219,36 +234,46 @@ public class RegistryProtocol implements Protocol {
         //export invoker
 
         /**
-         *  启动 nettyServer 进行服务监听 {@link #doLocalExport(Invoker, URL)}
+         *  【重要】启动 nettyServer 进行服务监听 {@link #doLocalExport(Invoker, URL)}
          */
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
         // url to registry
 
         /**
-         * 获取服务注册中心和注册服务 {@link #getRegistry(Invoker)}
+         * 根据invoker中的url获取Registry实例: zookeeperRegistry {@link #getRegistry(Invoker)}
          */
         final Registry registry = getRegistry(originInvoker);
+
+        /**
+         * //获取要注册到注册中心的URL: dubbo://ip:port {@link #getRegisteredProviderUrl(URL, URL)}
+         */
         final URL registeredProviderUrl = getRegisteredProviderUrl(providerUrl, registryUrl);
         ProviderInvokerWrapper<T> providerInvokerWrapper = ProviderConsumerRegTable.registerProvider(originInvoker,
                 registryUrl, registeredProviderUrl);
         //to judge if we need to delay publish
         boolean register = registeredProviderUrl.getParameter("register", true);
+
+        //是否配置了注册中心，如果是， 则需要注册
         if (register) {
 
             /**
-             * 注册 {@link #register(URL, URL)}
+             * 注册到注册中心URL {@link #register(URL, URL)}
              */
             register(registryUrl, registeredProviderUrl);
             providerInvokerWrapper.setReg(true);
         }
 
         // Deprecated! Subscribe to override rules in 2.6.x or before.
+
+        //设置注册中心的订阅
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
         exporter.setRegisterUrl(registeredProviderUrl);
         exporter.setSubscribeUrl(overrideSubscribeUrl);
         //Ensure that a new exporter instance is returned every time export
+
+        //保证每次export都返回一个新的exporter实例
         return new DestroyableExporter<>(exporter);
     }
 
@@ -264,12 +289,14 @@ public class RegistryProtocol implements Protocol {
         String key = getCacheKey(originInvoker);
 
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
+
+            //对原有的invoker,委托给了InvokerDelegate
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
 
             /**
              * {@link org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper#export(Invoker)}
              *
-             * 最终执行 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
+             * 将invoker转换为exporter并启动netty服务 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
              */
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
