@@ -25,6 +25,7 @@ import static org.apache.dubbo.rpc.Constants.PROXY_KEY;
 /**
  * ProxyFactory. (API/SPI, Singleton, ThreadSafe)
  *
+ *  三个方法，都添加了 @Adaptive 的自适应扩展点，所以如果调用 getInvoker 方法，都会返回一个 `ProxyFactory$Adpative`
  *
  *  【 动态生成的 ProxyFactory$Adpative 类 】
  *

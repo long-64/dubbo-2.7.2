@@ -253,7 +253,14 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             ((RpcInvocation) invocation).addAttachments(contextAttachments);
         }
 
+        /**
+         *  {@link #list(Invocation)}  方法会调从注册中心拉取所有 provider 实例信息，并通过路由筛选出可用的 provider 实例
+         */
         List<Invoker<T>> invokers = list(invocation);
+
+        /**
+         *  初始化负载均衡 {@link #initLoadBalance(List, Invocation)}
+         */
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
@@ -293,6 +300,10 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
                                        LoadBalance loadbalance) throws RpcException;
 
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
+
+        /**
+         *  【 core】{@link org.apache.dubbo.rpc.cluster.directory.AbstractDirectory#list(Invocation)}
+         */
         return directory.list(invocation);
     }
 

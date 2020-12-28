@@ -86,9 +86,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
         this.root = group;
 
         /**
-         * 创建链接 {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter#connect(URL)}
+         *  产生ZK 链接 {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter#connect(URL)}
          */
         zkClient = zookeeperTransporter.connect(url);
+
+        //添加zookeeper状态变化事件
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {

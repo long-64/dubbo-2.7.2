@@ -28,6 +28,9 @@ import org.apache.dubbo.common.Node;
  *  dubbo 核心模型，代表可执行体。
  *
  *  它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
+ *
+ *   在服务提供方，Invoker用于调用服务提供类
+ *   在服务消费方，Invoker用于执行远程调用
  */
 public interface Invoker<T> extends Node {
 

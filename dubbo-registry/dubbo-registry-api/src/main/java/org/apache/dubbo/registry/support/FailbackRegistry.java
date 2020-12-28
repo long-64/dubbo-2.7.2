@@ -233,11 +233,21 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedUnregistered(url);
         try {
             // Sending a registration request to the server side
+
+            /**
+             *  调用子类实现真正的服务注册，把url注册到zk上
+             *
+             *   ZK 注册中心 {@link org.apache.dubbo.registry.zookeeper.ZookeeperRegistry#doRegister(URL)}
+             *   etcd {@link org.apache.dubbo.registry.etcd.EtcdRegistry#doRegister(URL)}
+             *   dubbo {@link org.apache.dubbo.registry.dubbo.DubboRegistry#doRegister(URL)}
+             */
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
 
             // If the startup detection is opened, the Exception is thrown directly.
+
+            // 如果开启了启动时检测，则直接抛出异常
             boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                     && url.getParameter(Constants.CHECK_KEY, true)
                     && !CONSUMER_PROTOCOL.equals(url.getProtocol());
@@ -252,6 +262,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             }
 
             // Record a failed registration request to a failed list, retry regularly
+
+            /*
+             * 将失败的注册请求记录到失败列表，定时重试
+             */
             addFailedRegistered(url);
         }
     }

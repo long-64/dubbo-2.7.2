@@ -191,7 +191,8 @@ public class RegistryProtocol implements Protocol {
 
         /**
          * 通过工厂获取 registry
-         *  ZK 注册中心 {@link org.apache.dubbo.registry.zookeeper.ZookeeperRegistry#doRegister(URL)}
+         *
+         *   抽象父类 {@link org.apache.dubbo.registry.support.FailbackRegistry#register(URL)}
          */
         registry.register(registeredProviderUrl);
     }
@@ -348,8 +349,14 @@ public class RegistryProtocol implements Protocol {
      *
      * @param originInvoker
      * @return
+     *
+     *  1、把url转化为对应配置的注册中心的具体协议
+     *  2、根据具体协议，从registryFactory中获得指定的注册中心实现
+     *
      */
     private Registry getRegistry(final Invoker<?> originInvoker) {
+
+        //把url转化为配置的具体协议，比如zookeeper://ip:port. 这样后续获得的注册中心就会是基于zk的实现
         URL registryUrl = getRegistryUrl(originInvoker);
 
         /**
