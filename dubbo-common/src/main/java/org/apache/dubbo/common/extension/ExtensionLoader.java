@@ -382,9 +382,18 @@ public class ExtensionLoader<T> {
         return (T) holder.get();
     }
 
+    /**
+     * 获取或者创建一个 Holder。
+     * @param name
+     * @return
+     */
     private Holder<Object> getOrCreateHolder(String name) {
+
+        //检查缓存中是否存在
         Holder<Object> holder = cachedInstances.get(name);
         if (holder == null) {
+
+            //缓存中不存在就去创建一个新的Holder
             cachedInstances.putIfAbsent(name, new Holder<>());
             holder = cachedInstances.get(name);
         }
@@ -846,8 +855,9 @@ public class ExtensionLoader<T> {
          *  type: 扩展接口:
          *      第一个是 `ExtensionFactory` 在 {@link ExtensionLoader#ExtensionLoader(Class)}
          *          1、最终返回2个类。
-         *                  {@link org.apache.dubbo.config.spring.extension.SpringExtensionFactory}
-         *                  {@link org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
+         *                ‘用于从 Spring 的 IOC 容器中获取所需的拓展’  {@link org.apache.dubbo.config.spring.extension.SpringExtensionFactory}
+         *                ‘创建自适应的拓展’  {@link org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
+         *
          *          2、 [ AdaptiveExtensionFactory ] {@link org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
          *              因为类上有@Adaptive注解，直接被缓存在 {@link #cachedAdaptiveClass}
          *

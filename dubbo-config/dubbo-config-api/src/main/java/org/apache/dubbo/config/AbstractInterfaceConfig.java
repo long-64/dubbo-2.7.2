@@ -340,13 +340,21 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 }
                 if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
+
+                    // 添加 ApplicationConfig 中的字段信息到 map 中
                     appendParameters(map, application);
+
+                    // 添加 RegistryConfig 字段信息到 map 中
                     appendParameters(map, config);
+
+                    // 添加 path，protocol 等信息到 map 中
                     map.put(PATH_KEY, RegistryService.class.getName());
                     appendRuntimeParameters(map);
                     if (!map.containsKey(PROTOCOL_KEY)) {
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
+
+                    // 解析得到 URL 列表，address 可能包含多个注册中心 ip，
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
                     for (URL url : urls) {
@@ -358,8 +366,18 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(REGISTRY_PROTOCOL)
                                 .build();
+
+                        /**
+                         *
+                         * 通过判断条件，决定是否添加 url 到 registryList 中，条件如下：
+                         *
+                         *  (服务提供者 && register = true 或 null) || (非服务提供者 && subscribe = true 或 null)
+                         *
+                         */
                         if ((provider && url.getParameter(REGISTER_KEY, true))
                                 || (!provider && url.getParameter(SUBSCRIBE_KEY, true))) {
+
+                            // 添加url到registryList中
                             registryList.add(url);
                         }
                     }

@@ -280,6 +280,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     }
 
     private void init() {
+
+        // 避免重复初始化
         if (initialized) {
             return;
         }
@@ -294,12 +296,18 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         map.put(SIDE_KEY, CONSUMER_SIDE);
 
         appendRuntimeParameters(map);
+
+        // 非泛化服务
         if (!isGeneric()) {
+
+            // 获取版本
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
             }
 
+
+            // 获取接口方法列表，并添加到 map 中
             String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
@@ -309,6 +317,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             }
         }
         map.put(INTERFACE_KEY, interfaceName);
+
+        // 将 ApplicationConfig、ConsumerConfig、ReferenceConfig 等对象的字段信息添加到 map 中
         appendParameters(map, metrics);
         appendParameters(map, application);
         appendParameters(map, module);
@@ -319,12 +329,16 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         Map<String, Object> attributes = null;
         if (CollectionUtils.isNotEmpty(methods)) {
             attributes = new HashMap<String, Object>();
+
+            // 遍历 MethodConfig 列表
             for (MethodConfig methodConfig : methods) {
                 appendParameters(map, methodConfig, methodConfig.getName());
                 String retryKey = methodConfig.getName() + ".retry";
                 if (map.containsKey(retryKey)) {
                     String retryValue = map.remove(retryKey);
                     if ("false".equals(retryValue)) {
+
+                        // 添加重试次数配置 methodName.retries
                         map.put(methodConfig.getName() + ".retries", "0");
                     }
                 }
@@ -332,6 +346,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             }
         }
 
+        // 获取服务消费者 ip 地址
         String hostToRegistry = ConfigUtils.getSystemProperty(DUBBO_IP_TO_REGISTRY);
         if (StringUtils.isEmpty(hostToRegistry)) {
             hostToRegistry = NetUtils.getLocalHost();
@@ -454,7 +469,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 } else { // not a registry url, must be direct invoke.
 
                     /**
-                     * 容灾机制
+                     *  Cluster 将多个服务节点合并为一个，并生成一个 Invoker
                      */
                     invoker = CLUSTER.join(new StaticDirectory(invokers));
                 }

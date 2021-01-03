@@ -586,6 +586,8 @@ public class DubboProtocol extends AbstractProtocol {
      */
     private List<ReferenceCountExchangeClient> getSharedClient(URL url, int connectNum) {
         String key = url.getAddress();
+
+        // 获取带有“引用计数”功能的 ExchangeClient
         List<ReferenceCountExchangeClient> clients = referenceClientMap.get(key);
 
         if (checkClientCanUse(clients)) {
@@ -708,13 +710,18 @@ public class DubboProtocol extends AbstractProtocol {
     private ExchangeClient initClient(URL url) {
 
         // client type setting.
+
+        // 获取客户端类型，默认为 netty
         String str = url.getParameter(CLIENT_KEY, url.getParameter(SERVER_KEY, DEFAULT_REMOTING_CLIENT));
 
+        // 添加编解码和心跳包参数到 url 中
         url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
         // enable heartbeat by default
         url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));
 
         // BIO is not allowed since it has severe performance issue.
+
+        // 检测客户端类型是否存在，不存在则抛出异常
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
             throw new RpcException("Unsupported client type: " + str + "," +
                     " supported client type is " + StringUtils.join(ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions(), " "));
@@ -731,7 +738,7 @@ public class DubboProtocol extends AbstractProtocol {
             } else {
 
                 /**
-                 *  及时连接 {@link Exchangers#connect(String, ExchangeHandler)}
+                 *  及时连接（创建普通 ExchangeClient 实例） {@link Exchangers#connect(String, ExchangeHandler)}
                  */
                 client = Exchangers.connect(url, requestHandler);
             }

@@ -291,6 +291,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     public void checkAndUpdateSubConfigs() {
         // Use default configs defined explicitly on global configs
+
+        // 检查配置项包括provider是否存在，导出端口是否可用，注册中心是否可以连接等等
         completeCompoundConfigs();
         // Config Center should always being started first.
         startConfigCenter();
@@ -301,6 +303,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (!isOnlyInJvm()) {
             checkRegistry();
         }
+
+        // 检查接口内部方法是否不为空
         this.refresh();
         checkMetadataReport();
 
@@ -525,8 +529,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
 
         Map<String, String> map = new HashMap<String, String>();
+
+        // 添加 side、版本、时间戳以及进程号等信息到 map 中
         map.put(SIDE_KEY, PROVIDER_SIDE);
 
+        // 通过反射将对象的字段信息添加到 map 中
         appendRuntimeParameters(map);
         appendParameters(map, metrics);
         appendParameters(map, application);
@@ -606,11 +613,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 map.put(REVISION_KEY, revision);
             }
 
+            // 为接口生成包裹类 Wrapper，Wrapper 中包含了接口的详细信息，比如接口方法名数组，字段信息等
             String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
                 map.put(METHODS_KEY, ANY_VALUE);
             } else {
+
+                // 将逗号作为分隔符连接方法名，并将连接后的字符串放入 map 中
                 map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
             }
         }
@@ -628,18 +638,27 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
 
         /**
-         *  构建 URL 对象。
+         *  获取上下文路径并且组装URL
          */
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .hasExtension(url.getProtocol())) {
+
+            // 加载 ConfiguratorFactory，并生成 Configurator 实例，然后通过实例配置 url，使用了前面提到的SPI机制
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                     .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
 
 
-        // 导出服务、本地服务、远程服务
+        /*****************************
+         *
+         *  如果 scope = none，则什么都不做
+         *  scope != remote，导出到本地
+         *  scope != local，导出到远程
+         *
+         ****************************/
+
         String scope = url.getParameter(SCOPE_KEY);
         // don't export when none is configured
 
@@ -709,7 +728,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 } else {
 
                     /**
-                     * 直连方式。{@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
+                     * 【 不存在注册中心 】直连方式。{@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
                      */
                     Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
                     DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);

@@ -143,23 +143,43 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     * 订阅核心处理。
+     * @param url
+     * @param listener
+     */
     @Override
     public void doSubscribe(final URL url, final NotifyListener listener) {
         try {
+            //根据URL得到服务接口为*，也就是所有
             if (ANY_VALUE.equals(url.getServiceInterface())) {
                 String root = toRootPath();
+
+                //拿取URL下的监听器
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
+
+                //不存在则进行创建
                 if (listeners == null) {
                     zkListeners.putIfAbsent(url, new ConcurrentHashMap<>());
                     listeners = zkListeners.get(url);
                 }
+
+                //得到子目录的监听器
                 ChildListener zkListener = listeners.get(listener);
+
+                //无法得到子目录监听器，则会新建一个。
                 if (zkListener == null) {
                     listeners.putIfAbsent(listener, (parentPath, currentChilds) -> {
                         for (String child : currentChilds) {
                             child = URL.decode(child);
                             if (!anyServices.contains(child)) {
                                 anyServices.add(child);
+
+                                /**
+                                 * 如果consumer的interface为*，会订阅每一个url，会触发另一个分支的逻辑
+                                 *  这里是用来对/dubbo下面提供者新增时的回调，相当于增量
+                                 *
+                                 */
                                 subscribe(url.setPath(child).addParameters(INTERFACE_KEY, child,
                                         Constants.CHECK_KEY, String.valueOf(false)), listener);
                             }
@@ -168,6 +188,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     zkListener = listeners.get(listener);
                 }
                 zkClient.create(root, false);
+
+                //添加监听器会返回子节点集合
                 List<String> services = zkClient.addChildListener(root, zkListener);
                 if (CollectionUtils.isNotEmpty(services)) {
                     for (String service : services) {
@@ -178,10 +200,16 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                 }
             } else {
+
+                //这边是针对明确interface的订阅逻辑
                 List<URL> urls = new ArrayList<>();
+
+                //针对每种category路径进行监听
                 for (String path : toCategoriesPath(url)) {
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                     if (listeners == null) {
+
+                        //封装回调逻辑
                         zkListeners.putIfAbsent(url, new ConcurrentHashMap<>());
                         listeners = zkListeners.get(url);
                     }
@@ -190,7 +218,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         listeners.putIfAbsent(listener, (parentPath, currentChilds) -> ZookeeperRegistry.this.notify(url, listener, toUrlsWithEmpty(url, parentPath, currentChilds)));
                         zkListener = listeners.get(listener);
                     }
+
+                    // 创建节点
                     zkClient.create(path, false);
+
+                    //增加回调
                     List<String> children = zkClient.addChildListener(path, zkListener);
                     if (children != null) {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
@@ -198,7 +230,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
 
                 /**
-                 * 最终调用 {@link org.apache.dubbo.registry.integration.RegistryDirectory#notify(List)}
+                 * 并且会对订阅的URL下的服务进行监听，并会实时的更新Consumer中的invoke列表，使得能够进行调用 {@link org.apache.dubbo.registry.integration.RegistryDirectory#notify(List)}
                  */
                 notify(url, listener, urls);
             }

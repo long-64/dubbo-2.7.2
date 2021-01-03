@@ -36,6 +36,8 @@ import java.util.Set;
 
 /**
  * SpringExtensionFactory
+ *
+ *  【 ‘用于从 Spring 的 IOC 容器中获取所需的拓展’ 】
  */
 public class SpringExtensionFactory implements ExtensionFactory {
     private static final Logger logger = LoggerFactory.getLogger(SpringExtensionFactory.class);
@@ -49,6 +51,8 @@ public class SpringExtensionFactory implements ExtensionFactory {
             ((ConfigurableApplicationContext) context).registerShutdownHook();
             DubboShutdownHook.getDubboShutdownHook().unregister();
         }
+
+        // 添加，容器关闭事件。（用于释放：‘Protocol’协议）
         BeanFactoryUtils.addApplicationListener(context, SHUTDOWN_HOOK_LISTENER);
     }
 
@@ -106,6 +110,9 @@ public class SpringExtensionFactory implements ExtensionFactory {
         return null;
     }
 
+    /**
+     * 监听-Spring 容器关闭事件。
+     */
     private static class ShutdownHookListener implements ApplicationListener {
         @Override
         public void onApplicationEvent(ApplicationEvent event) {

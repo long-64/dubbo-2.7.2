@@ -17,6 +17,7 @@
 package org.apache.dubbo.rpc;
 
 import org.apache.dubbo.common.Node;
+import org.apache.dubbo.common.URL;
 
 /**
  * Invoker. (API/SPI, Prototype, ThreadSafe)
@@ -29,8 +30,11 @@ import org.apache.dubbo.common.Node;
  *
  *  它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
  *
- *   在服务提供方，Invoker用于调用服务提供类
- *   在服务消费方，Invoker用于执行远程调用
+ *   在服务提供方，Invoker 用于调用服务提供类 （一个Wapper类）
+ *      {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
+ *      
+ *   在服务消费方，Invoker 用于执行远程调用  （是一个 Netty 客户端）
+ *      {@link org.apache.dubbo.rpc.protocol.AbstractProtocol#refer(Class, URL)}
  */
 public interface Invoker<T> extends Node {
 

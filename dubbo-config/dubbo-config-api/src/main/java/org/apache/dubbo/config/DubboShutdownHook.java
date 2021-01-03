@@ -82,6 +82,10 @@ public class DubboShutdownHook extends Thread {
      * Destroy all the resources, including registries and protocols.
      */
     public void doDestroy() {
+
+        /**
+         * CAS
+         */
         if (!destroyed.compareAndSet(false, true)) {
             return;
         }
@@ -93,6 +97,8 @@ public class DubboShutdownHook extends Thread {
 
     /**
      * Destroy all the protocols.
+     *
+     *   释放协议。
      */
     private void destroyProtocols() {
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);

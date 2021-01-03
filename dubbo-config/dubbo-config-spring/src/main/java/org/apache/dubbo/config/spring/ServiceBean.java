@@ -54,6 +54,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 import static org.apache.dubbo.config.spring.util.BeanFactoryUtils.addApplicationListener;
 
 /**
+ *  ServiceBean (Dubbo 与 Spring 框架进行整合的关键，)
+ *
  * ServiceFactoryBean
  *
  *  暴露本地服务，入口
@@ -97,6 +99,11 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
+
+        /**
+         * 添加，监听的事件 {@link SpringExtensionFactory#addApplicationContext(ApplicationContext)}
+         *
+         */
         SpringExtensionFactory.addApplicationContext(applicationContext);
         supportedApplicationListener = addApplicationListener(applicationContext, this);
     }

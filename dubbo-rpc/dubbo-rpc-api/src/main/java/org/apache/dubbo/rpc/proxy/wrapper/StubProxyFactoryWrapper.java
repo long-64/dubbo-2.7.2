@@ -71,7 +71,7 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
 
         /**
-         * {@link org.apache.dubbo.rpc.proxy.AbstractProxyFactory#getProxy(Invoker)}
+         *  【 core 】 {@link org.apache.dubbo.rpc.proxy.AbstractProxyFactory#getProxy(Invoker)}
          */
         T proxy = proxyFactory.getProxy(invoker);
         if (GenericService.class != invoker.getInterface()) {
