@@ -92,7 +92,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
 
             /**
-             * 选择负载均衡策略。
+             * 选择负载均衡策略。{@link #select(LoadBalance, Invocation, List, List)}
              */
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             invoked.add(invoker);
@@ -100,6 +100,10 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
             // 发起远程调用。
             try {
+
+                /**
+                 *  发起远程调用，直接返回结果。
+                 */
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {
                     logger.warn("Although retry the method " + methodName

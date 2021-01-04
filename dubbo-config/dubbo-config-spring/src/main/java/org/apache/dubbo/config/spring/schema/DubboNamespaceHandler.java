@@ -66,19 +66,31 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport {
         registerBeanDefinitionParser("registry", new DubboBeanDefinitionParser(RegistryConfig.class, true));
         registerBeanDefinitionParser("config-center", new DubboBeanDefinitionParser(ConfigCenterBean.class, true));
         registerBeanDefinitionParser("metadata-report", new DubboBeanDefinitionParser(MetadataReportConfig.class, true));
+
+        /**
+         * monitor {@link MonitorConfig}
+         */
         registerBeanDefinitionParser("monitor", new DubboBeanDefinitionParser(MonitorConfig.class, true));
         registerBeanDefinitionParser("metrics", new DubboBeanDefinitionParser(MetricsConfig.class, true));
+
+        /**
+         * provider {@link ProviderConfig
+         */
         registerBeanDefinitionParser("provider", new DubboBeanDefinitionParser(ProviderConfig.class, true));
+
+        /**
+         * consumer {@link ConsumerConfig
+         */
         registerBeanDefinitionParser("consumer", new DubboBeanDefinitionParser(ConsumerConfig.class, true));
         registerBeanDefinitionParser("protocol", new DubboBeanDefinitionParser(ProtocolConfig.class, true));
 
         /**
-         * 服务暴露 {@link ServiceBean#onApplicationEvent(ContextRefreshedEvent)}
+         *  【 服务发布 】 {@link ServiceBean#onApplicationEvent(ContextRefreshedEvent)}
          */
         registerBeanDefinitionParser("service", new DubboBeanDefinitionParser(ServiceBean.class, true));
 
         /**
-         * 服务调用 {@link ReferenceBean#getObject()}
+         *  【 服务调用 】 {@link ReferenceBean#getObject()}
          */
         registerBeanDefinitionParser("reference", new DubboBeanDefinitionParser(ReferenceBean.class, false));
         registerBeanDefinitionParser("annotation", new AnnotationBeanDefinitionParser());

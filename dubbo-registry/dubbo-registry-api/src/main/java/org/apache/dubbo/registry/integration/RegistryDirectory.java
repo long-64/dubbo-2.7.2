@@ -222,7 +222,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     @Override
     public synchronized void notify(List<URL> urls) {
 
-        // 对不同类别的元数据进行分类
+        //对url列表进行校验、过滤，然后分成 config、router、provider 3个分组map
         Map<String, List<URL>> categoryUrls = urls.stream()
                 .filter(Objects::nonNull)
                 .filter(this::isValidCategory)

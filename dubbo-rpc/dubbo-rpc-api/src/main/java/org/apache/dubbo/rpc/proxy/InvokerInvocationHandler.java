@@ -18,6 +18,7 @@ package org.apache.dubbo.rpc.proxy;
 
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.RpcInvocation;
 
@@ -35,6 +36,14 @@ public class InvokerInvocationHandler implements InvocationHandler {
         this.invoker = handler;
     }
 
+    /**
+     * 如果是tostring、hashcode、equals，就直接返回
+     * @param proxy
+     * @param method
+     * @param args
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
@@ -52,6 +61,12 @@ public class InvokerInvocationHandler implements InvocationHandler {
             return invoker.equals(args[0]);
         }
 
+        /**
+         *  1、是否客户端强制配置了mock调用，那么在这种场景中主要可以用来解决服务端还没开发好的时候直接使用本地数据进行测试
+         *  2、是否出现了异常，如果出现异常则使用配置好的Mock类来实现服务的降级
+         *
+         * 【 core】{@link org.apache.dubbo.rpc.cluster.support.wrapper.MockClusterInvoker#invoke(Invocation)}
+         */
         return invoker.invoke(new RpcInvocation(method, args)).recreate();
     }
 }

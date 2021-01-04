@@ -37,6 +37,9 @@ import static org.apache.dubbo.rpc.Constants.SERVICE_FILTER_KEY;
 
 /**
  * ListenerProtocol
+ *
+ *
+ *   【 对invoker进行filter的包装，实现请求的过滤 】
  */
 public class ProtocolFilterWrapper implements Protocol {
 

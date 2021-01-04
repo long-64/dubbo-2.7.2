@@ -141,6 +141,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             }
         }
 
+        /**
+         *
+         *  【 core】 {@link #doSelect(LoadBalance, Invocation, List, List)}
+         *
+         */
         Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
 
         if (sticky) {
@@ -259,13 +264,13 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         List<Invoker<T>> invokers = list(invocation);
 
         /**
-         *  初始化负载均衡 {@link #initLoadBalance(List, Invocation)}
+         *  【 初始化负载均衡 】 {@link #initLoadBalance(List, Invocation)}
          */
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
         /**
-         * 子类实现，具体，容错
+         * 【 子类实现，具体，容错 】
          *  默认方式 {@link FailoverClusterInvoker#doInvoke(Invocation, List, LoadBalance)}
          */
         return doInvoke(invocation, invokers, loadbalance);

@@ -68,6 +68,15 @@ public class MockClusterInvoker<T> implements Invoker<T> {
         return directory.getInterface();
     }
 
+    /**
+     *
+     * 1、是否客户端强制配置了mock调用，那么在这种场景中主要可以用来解决服务端还没开发好的时候直接使用本地数据进行测试
+     * 2、是否出现了异常，如果出现异常则使用配置好的Mock类来实现服务的降级
+     *
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;
@@ -96,6 +105,10 @@ public class MockClusterInvoker<T> implements Invoker<T> {
         } else {
             //fail-mock
             try {
+
+                /**
+                 *  调用抽象类 {@link org.apache.dubbo.rpc.cluster.support.AbstractClusterInvoker#invoke(Invocation)}
+                 */
                 result = this.invoker.invoke(invocation);
             } catch (RpcException e) {
                 if (e.isBiz()) {

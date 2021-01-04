@@ -220,7 +220,9 @@ public class RegistryProtocol implements Protocol {
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
 
-        //这里获得的是zookeeper注册中心的url: zookeeper://ip:port
+        /**
+         * 这里获得的是zookeeper注册中心的url: zookeeper://ip:port {@link #getRegistryUrl(Invoker)}
+         */
         URL registryUrl = getRegistryUrl(originInvoker);
         // url to export locally
 
@@ -245,7 +247,7 @@ public class RegistryProtocol implements Protocol {
         //export invoker
 
         /**
-         *  【重要】启动 nettyServer 进行服务监听 {@link #doLocalExport(Invoker, URL)}
+         *  【重要】启动 nettyServer 进行服务监听（由具体的协议，来发布服务） {@link #doLocalExport(Invoker, URL)}
          */
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
@@ -296,12 +298,23 @@ public class RegistryProtocol implements Protocol {
     }
 
     @SuppressWarnings("unchecked")
+
+    /**
+     *
+     *  发布一份服务，本质上，应该启动一个通信服务。进行监听。
+     *
+     */
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker, URL providerUrl) {
         String key = getCacheKey(originInvoker);
 
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
 
-            //对原有的invoker,委托给了InvokerDelegate
+            /*
+             * 对原有的invoker,委托给了InvokerDelegate
+             *  InvokerDelegete: 是RegistryProtocol的一个静态内部类，该类是一个originInvoker的委托类，该类存储了originInvoker，
+             *   其父类InvokerWrapper还会存储providerUrl，InvokerWrapper会调用originInvoker的invoke方法，也会销毁invoker。可以管理invoker的生命周期
+             *
+             */
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
 
             /**
@@ -376,6 +389,8 @@ public class RegistryProtocol implements Protocol {
     }
 
     private URL getRegistryUrl(Invoker<?> originInvoker) {
+
+        //把url转化为配置的具体协议，比如zookeeper://ip:port. 这样后续获得的注册中心就会是基于zk的实现
         URL registryUrl = originInvoker.getUrl();
         if (REGISTRY_PROTOCOL.equals(registryUrl.getProtocol())) {
             String protocol = registryUrl.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY);
@@ -502,7 +517,9 @@ public class RegistryProtocol implements Protocol {
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
 
-        // 生成服务消费者链接
+        /*
+         * 生成服务消费者链接 （ 构建一个consumer://协议的地址注册到注册中心 ）
+         */
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
 
         // 注册服务消费者，在 consumers 目录下新节点
@@ -519,7 +536,7 @@ public class RegistryProtocol implements Protocol {
         directory.buildRouterChain(subscribeUrl);
 
         /**
-         * 向服务注册中心订阅服务提供者的服务 {@link RegistryDirectory#subscribe(URL)}
+         * 向服务注册中心订阅服务提供者的服务（ 订阅zookeeper中节点的变化 ） {@link RegistryDirectory#subscribe(URL)}
          */
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));

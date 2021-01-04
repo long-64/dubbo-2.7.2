@@ -399,6 +399,8 @@ public class DubboProtocol extends AbstractProtocol {
         // client 也可以暴露一个只有server可以调用的服务。
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
         if (isServer) {
+
+            //是否在serverMap中缓存了
             ExchangeServer server = serverMap.get(key);
             if (server == null) {
                 synchronized (this) {
@@ -443,6 +445,7 @@ public class DubboProtocol extends AbstractProtocol {
                 .build();
         String str = url.getParameter(SERVER_KEY, DEFAULT_REMOTING_SERVER);
 
+        // 通过 SPI 检测是否存在 server 参数所代表的 Transporter 拓展，不存在则抛出异常
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
             throw new RpcException("Unsupported server type: " + str + ", url: " + url);
         }

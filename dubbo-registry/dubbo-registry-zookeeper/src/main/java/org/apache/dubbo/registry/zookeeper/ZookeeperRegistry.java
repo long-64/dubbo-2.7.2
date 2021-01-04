@@ -77,12 +77,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+
+        // 获得group名称
         String group = url.getParameter(GROUP_KEY, DEFAULT_ROOT);
         if (!group.startsWith(PATH_SEPARATOR)) {
             group = PATH_SEPARATOR + group;
         }
 
-        //设置根节点
+        // 设置根节点
         this.root = group;
 
         /**
@@ -90,7 +92,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
          */
         zkClient = zookeeperTransporter.connect(url);
 
-        //添加zookeeper状态变化事件
+        // 添加zookeeper状态变化事件
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {

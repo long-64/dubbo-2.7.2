@@ -61,12 +61,12 @@ import static org.apache.dubbo.config.spring.util.BeanFactoryUtils.addApplicatio
  *  暴露本地服务，入口
  * @export
  *
- *  1、InitializingBean （接口为bean提供了初始化方法的方式，被重写的方法为afterPropertiesSet）
- *  2、DisposableBean （重写 destroy 方法，bean 被销毁的时候）
- *  3、ApplicationContextAware (容器初始化的时候，会自动的将ApplicationContext注入进来 )
- *  4、ApplicationListener （事件监听，容器启动时会发一个事件，被重写方法 onApplicationEvent ）
- *  5、BeanNameAware （获得自身初始化时，本身的bean的id属性，被重写的方法为setBeanName ）
- *  6、ApplicationEventPublisherAware （异步事件发送器，被重写的方法为 setApplicationEventPublisher ）
+ *  1、InitializingBean （接口为bean提供了初始化方法的方式，被重写的方法为 `afterPropertiesSet` ）
+ *  2、DisposableBean （重写 destroy 方法，bean 被销毁的时候，会自动执行 `destory` 方法 ）
+ *  3、ApplicationContextAware (容器初始化的时候，会自动的将 ApplicationContext注入进来 )
+ *  4、ApplicationListener （事件监听，容器启动时会发一个事件，被重写方法 `onApplicationEvent` ）
+ *  5、BeanNameAware （获得自身初始化时，本身的bean的id属性，被重写的方法为 `setBeanName` ）
+ *  6、ApplicationEventPublisherAware （异步事件发送器，被重写的方法为 `setApplicationEventPublisher` ）
  *
  */
 public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean, DisposableBean,
@@ -123,7 +123,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
     }
 
     /**
-     * 实现 `ApplicationListener`
+     * 实现 `ApplicationListener` ( spring容器启动之后，会收到一个这样的事件通知 )
      * @param event
      */
     @Override

@@ -24,6 +24,8 @@ import org.apache.dubbo.rpc.proxy.AbstractProxyFactory;
 import org.apache.dubbo.rpc.proxy.AbstractProxyInvoker;
 import org.apache.dubbo.rpc.proxy.InvokerInvocationHandler;
 
+import java.lang.reflect.Method;
+
 /**
  * JavaassistRpcProxyFactory
  */
@@ -37,6 +39,8 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
          *  初始化 {@link InvokerInvocationHandler#InvokerInvocationHandler}
          *
          *  [ proxy] {@link Proxy#getProxy(Class[])}
+         *
+         *   【 core 】{@link InvokerInvocationHandler#invoke(Object, Method, Object[])}
          */
         return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
     }

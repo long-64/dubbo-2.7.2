@@ -480,6 +480,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
+
+    /**
+     *
+     *  1、加载所有配置的注册中心地址。
+     *  2、遍历所有配置的协议，protocols
+     *  3、针对每种协议发布一个对应协议的服务
+     *
+     */
     private void doExportUrls() {
 
         /**
@@ -515,7 +523,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     /**
-     *  将服务发布到注册中心。
+     *  发布指定协议的服务。
      *
      *  内部把参数封装为 URL。
      *
@@ -716,6 +724,11 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                          *
                          */
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
+
+                        /*
+                         * DelegateProviderMetaDataInvoker 是 2.7 版本引入的，这里是对 Invoker 进行委托。
+                         *
+                         */
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
                         /**
