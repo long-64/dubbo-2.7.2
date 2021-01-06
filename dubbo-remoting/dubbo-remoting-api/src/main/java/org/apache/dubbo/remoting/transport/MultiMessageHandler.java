@@ -37,6 +37,10 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
         if (message instanceof MultiMessage) {
             MultiMessage list = (MultiMessage) message;
             for (Object obj : list) {
+
+                /**
+                 *  心跳消息处理器 {@link org.apache.dubbo.remoting.exchange.support.header.HeartbeatHandler#received(Channel, Object)}
+                 */
                 handler.received(channel, obj);
             }
         } else {

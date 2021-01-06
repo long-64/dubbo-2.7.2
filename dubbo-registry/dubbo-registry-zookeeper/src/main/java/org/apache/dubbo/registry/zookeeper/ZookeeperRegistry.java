@@ -128,7 +128,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         try {
 
             /**
-             * [ZkClient] {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperClient#create(String, boolean)}
+             * [ zk 注册服务 ] {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperClient#create(String, boolean)}
              */
             zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
         } catch (Throwable e) {

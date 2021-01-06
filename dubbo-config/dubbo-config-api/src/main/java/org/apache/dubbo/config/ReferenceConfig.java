@@ -358,7 +358,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         map.put(REGISTER_IP_KEY, hostToRegistry);
 
         /**
-         * 创建代理 {@link #createProxy(Map)}
+         * 【 创建代理 】 {@link #createProxy(Map)}
          */
         ref = createProxy(map);
 
@@ -469,7 +469,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 } else { // not a registry url, must be direct invoke.
 
                     /**
-                     *  Cluster 将多个服务节点合并为一个，并生成一个 Invoker
+                     *  Cluster 将多个服务节点合并为一个，并生成一个 Invoker（底层是以集群的方式 ）
                      */
                     invoker = CLUSTER.join(new StaticDirectory(invokers));
                 }

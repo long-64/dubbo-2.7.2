@@ -68,7 +68,7 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
                                       Object[] arguments) throws Throwable {
 
                 /**
-                 * 调用 Wrapper 的 invokeMethod 方法，invokeMethod 最终会调用目标方法
+                 * 调用 Wrapper 的 invokeMethod 方法， `wrapper` 是刚刚生成的 (Wrapper.getWrapper)
                  */
                 return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
             }

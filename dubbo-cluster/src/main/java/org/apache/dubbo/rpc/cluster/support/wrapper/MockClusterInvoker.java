@@ -73,6 +73,11 @@ public class MockClusterInvoker<T> implements Invoker<T> {
      * 1、是否客户端强制配置了mock调用，那么在这种场景中主要可以用来解决服务端还没开发好的时候直接使用本地数据进行测试
      * 2、是否出现了异常，如果出现异常则使用配置好的Mock类来实现服务的降级
      *
+     *
+     *  no mock(正常情况)
+     *  force:direct mock(屏蔽)
+     *  fail-mock(容错)
+     *
      * @param invocation
      * @return
      * @throws RpcException
@@ -88,7 +93,9 @@ public class MockClusterInvoker<T> implements Invoker<T> {
         if (value.length() == 0 || value.equalsIgnoreCase("false")) {
             //no mock
 
-            // 正常发起远程调用
+            /**
+             * 正常发起远程调用。
+             */
             result = this.invoker.invoke(invocation);
 
             // 设置 force:result 降级策略
@@ -99,7 +106,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
             //force:direct mock
 
             /**
-             * {@link #doMockInvoke(Invocation, RpcException)}
+             *  降级处理  {@link #doMockInvoke(Invocation, RpcException)}
              */
             result = doMockInvoke(invocation, null);
         } else {
@@ -118,6 +125,10 @@ public class MockClusterInvoker<T> implements Invoker<T> {
                 if (logger.isWarnEnabled()) {
                     logger.warn("fail-mock: " + invocation.getMethodName() + " fail-mock enabled , url : " + directory.getUrl(), e);
                 }
+
+                /**
+                 *  出现异常，则mock 处理 {@link #doMockInvoke(Invocation, RpcException)}
+                 */
                 result = doMockInvoke(invocation, e);
             }
         }

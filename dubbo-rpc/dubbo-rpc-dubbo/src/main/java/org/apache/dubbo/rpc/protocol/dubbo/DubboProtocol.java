@@ -137,7 +137,7 @@ public class DubboProtocol extends AbstractProtocol {
             Invocation inv = (Invocation) message;
 
             /**
-             *  获取调用方对应的 Invoker
+             *  获取调用方对应的 Invoker {@link DubboProtocol#getInvoker(Channel, Invocation)}
              */
             Invoker<?> invoker = getInvoker(channel, inv);
             // need to consider backward-compatibility if it's a callback

@@ -66,7 +66,7 @@ public class HeaderExchangeServer implements ExchangeServer {
         this.server = server;
 
         /**
-         * 这是一个心跳定时器，采用了线程池，如果断开就心跳重连
+         * 这是一个心跳定时器，采用了线程池，如果断开就心跳重连 {@link #startIdleCheckTask(URL)}
          *
          */
         startIdleCheckTask(getUrl());

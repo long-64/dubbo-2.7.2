@@ -59,6 +59,13 @@ public class NettyHandler extends SimpleChannelHandler {
         return channels;
     }
 
+    /**
+     * 处理，客户端发来的请求
+     *
+     * @param ctx
+     * @param e
+     * @throws Exception
+     */
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
@@ -83,10 +90,22 @@ public class NettyHandler extends SimpleChannelHandler {
         }
     }
 
+    /**
+     *
+     *  网络事件处理。
+     *
+     * @param ctx
+     * @param e
+     * @throws Exception
+     */
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
         try {
+
+            /**
+             *  复合消息处理器 {@link org.apache.dubbo.remoting.transport.MultiMessageHandler#received(Channel, Object)}
+             */
             handler.received(channel, e.getMessage());
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.getChannel());

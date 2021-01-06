@@ -54,6 +54,10 @@ public class ChannelEventRunnable implements Runnable {
     public void run() {
         if (state == ChannelState.RECEIVED) {
             try {
+
+                /**
+                 *  交互层请求响应处理器  {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler#received(Channel, Object)}
+                 */
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel

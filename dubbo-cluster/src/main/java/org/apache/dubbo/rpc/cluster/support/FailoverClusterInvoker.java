@@ -92,7 +92,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
 
             /**
-             * 选择负载均衡策略。{@link #select(LoadBalance, Invocation, List, List)}
+             *  【 选择负载均衡策略 】 {@link #select(LoadBalance, Invocation, List, List)}
              */
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             invoked.add(invoker);
@@ -102,7 +102,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             try {
 
                 /**
-                 *  发起远程调用，直接返回结果。
+                 *  发起远程调用，直接返回结果。 {@link org.apache.dubbo.rpc.protocol.AbstractInvoker#invoke(Invocation)}
                  */
                 Result result = invoker.invoke(invocation);
                 if (le != null && logger.isWarnEnabled()) {

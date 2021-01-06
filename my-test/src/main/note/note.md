@@ -16,17 +16,18 @@
 - `ServiceConfig # export()`
 - `ServiceConfig # exportLocal()` 本地服务暴露流程。
 
-#### 网络连接
-##### 消费端，发起的 TCP 连接
-- `AbstractServer # doOpen()` 模板方法
-
-
-
 ##### 接收用户发来的请求
 - `NettyServer# connected()`
     - `最终实现类: AbstractServer # connected()`
-    
-    
+
+##### 消费方接收服务端发送的执行结果。
+- `NettyHandler# messageReceived()`
+
+
+#### 网络连接
+##### 消费端，发起的 TCP 连接
+- `AbstractServer # doOpen()` 模板方法
+ 
  ### 服务消费方
  ##### 服务消费方入口
  - `ReferenceConfig # get()`

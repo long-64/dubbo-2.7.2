@@ -59,6 +59,14 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
         handler.sent(channel, message);
     }
 
+    /**
+     *
+     *  心跳消息处理器
+     *
+     * @param channel
+     * @param message
+     * @throws RemotingException
+     */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         setReadTimestamp(channel);
@@ -85,6 +93,10 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
             }
             return;
         }
+
+        /**
+         *  业务线程转换处理器 {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#received(Channel, Object)}
+         */
         handler.received(channel, message);
     }
 
