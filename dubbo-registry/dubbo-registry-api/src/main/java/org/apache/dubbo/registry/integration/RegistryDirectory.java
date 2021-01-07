@@ -639,7 +639,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             // Get invokers from cache, only runtime routers will be executed.
 
             /**
-             * {@link RouterChain#route(URL, Invocation)}
+             *  【 进入路由 】 {@link RouterChain#route(URL, Invocation)}
              */
             invokers = routerChain.route(getConsumerUrl(), invocation);
         } catch (Throwable t) {

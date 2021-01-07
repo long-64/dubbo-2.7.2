@@ -57,5 +57,6 @@
 - 服务消费端并发控制 ActiveLimitFilter
 - 服务台消费端并发控制 ExecuteLimitFilter 
 
+
 #### 消费方编码原理
-- NettyCodecAdapter
+- `NettyCodecAdapter # encode()`

@@ -98,6 +98,10 @@ public class RouterChain<T> {
 
         // 寻找符合路由规则的 invoker
         for (Router router : routers) {
+
+            /**
+             *  进入路由 {@link org.apache.dubbo.rpc.cluster.router.mock.MockInvokersSelector#route(List, URL, Invocation)}
+             */
             finalInvokers = router.route(finalInvokers, url, invocation);
         }
         return finalInvokers;

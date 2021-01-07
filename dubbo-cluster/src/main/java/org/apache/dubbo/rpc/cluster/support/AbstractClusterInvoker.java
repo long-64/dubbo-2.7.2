@@ -307,7 +307,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
 
         /**
-         *  【 core】{@link org.apache.dubbo.rpc.cluster.directory.AbstractDirectory#list(Invocation)}
+         *  【 从目录中查找 】{@link org.apache.dubbo.rpc.cluster.directory.AbstractDirectory#list(Invocation)}
          */
         return directory.list(invocation);
     }

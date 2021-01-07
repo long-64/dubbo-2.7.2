@@ -56,12 +56,24 @@ public class MockInvokersSelector extends AbstractRouter {
             if (value == null) {
                 return getNormalInvokers(invokers);
             } else if (Boolean.TRUE.toString().equalsIgnoreCase(value)) {
+
+                /**
+                 *  这个方法就是将传入的invokers和设置的路由规则匹配，获得符合条件的invokers返回 {@link #getMockedInvokers(List)}
+                 */
                 return getMockedInvokers(invokers);
             }
         }
         return invokers;
     }
 
+    /**
+     *
+     * 这个方法就是将传入的invokers和设置的路由规则匹配，获得符合条件的invokers返回
+     *
+     * @param invokers
+     * @param <T>
+     * @return
+     */
     private <T> List<Invoker<T>> getMockedInvokers(final List<Invoker<T>> invokers) {
         if (!hasMockProviders(invokers)) {
             return null;

@@ -66,6 +66,8 @@ public class InvokerInvocationHandler implements InvocationHandler {
          *  2、是否出现了异常，如果出现异常则使用配置好的Mock类来实现服务的降级
          *
          * 【 core】{@link org.apache.dubbo.rpc.cluster.support.wrapper.MockClusterInvoker#invoke(Invocation)}
+         *
+         *  ( RpcInvocation ) 是将所有请求参数都会转换为RpcInvocation
          */
         return invoker.invoke(new RpcInvocation(method, args)).recreate();
     }

@@ -37,6 +37,10 @@ public final class DubboCountCodec implements Codec2 {
 
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
+
+        /**
+         *  编码 {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#encode(Channel, ChannelBuffer, Object)}
+         */
         codec.encode(channel, buffer, msg);
     }
 
