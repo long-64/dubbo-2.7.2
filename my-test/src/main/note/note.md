@@ -60,3 +60,8 @@
 
 #### 消费方编码原理
 - `NettyCodecAdapter # encode()`
+
+
+#### 时间轮
+- TimerTask.
+- `核心` HashedWheelTimer$Worker#run()

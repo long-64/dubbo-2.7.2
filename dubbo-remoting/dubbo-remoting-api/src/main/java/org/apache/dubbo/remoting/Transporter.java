@@ -53,6 +53,24 @@ public interface Transporter {
      * @return client
      * @throws RemotingException
      * @see org.apache.dubbo.remoting.Transporters#connect(URL, ChannelHandler...)
+     *
+     *  public org.apache.dubbo.remoting.Client connect(URL arg0, ChannelHandler arg1) throws RemotingException {
+     *         // 必须传递URL参数
+     *         if (arg0 == null) throw new IllegalArgumentException("url == null");
+     *         URL url = arg0;
+     *         // 确定扩展名，优先从URL中的client参数获取，其次是transporter参数
+     *         // 这两个参数名称由@Adaptive注解指定，最后是@SPI注解中的默认值
+     *         String extName = url.getParameter("client",
+     *             url.getParameter("transporter", "netty"));
+     *         if (extName == null)
+     *             throw new IllegalStateException("...");
+     *         // 通过ExtensionLoader加载Transporter接口的指定扩展实现
+     *         Transporter extension = (Transporter) ExtensionLoader
+     *               .getExtensionLoader(Transporter.class)
+     *                     .getExtension(extName);
+     *         return extension.connect(arg0, arg1);
+     *     }
+     *
      */
     @Adaptive({Constants.CLIENT_KEY, Constants.TRANSPORTER_KEY})
     Client connect(URL url, ChannelHandler handler) throws RemotingException;

@@ -24,6 +24,30 @@ import org.apache.dubbo.common.extension.SPI;
  * RegistryFactory. (SPI, Singleton, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
+ *
+ *
+ *
+ *  public class RegistryFactory$Adaptive
+ *               implements RegistryFactory {
+ *     public Registry getRegistry(org.apache.dubbo.common.URL arg0) {
+ *         if (arg0 == null) throw new IllegalArgumentException("...");
+ *         org.apache.dubbo.common.URL url = arg0;
+ *
+ *         // 尝试获取URL的Protocol，如果Protocol为空，则使用默认值"dubbo"
+ *         String extName = (url.getProtocol() == null ? "dubbo" :
+ *              url.getProtocol());
+ *         if (extName == null)
+ *             throw new IllegalStateException("...");
+ *
+ *         // 根据扩展名选择相应的扩展实现，Dubbo SPI的核心原理在下一课时深入分析
+ *         RegistryFactory extension = (RegistryFactory) ExtensionLoader
+ *           .getExtensionLoader(RegistryFactory.class)
+ *                 .getExtension(extName);
+ *         return extension.getRegistry(arg0);
+ *     }
+ * }
+ *
+ *
  */
 @SPI("dubbo")
 public interface RegistryFactory {

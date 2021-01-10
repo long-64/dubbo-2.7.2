@@ -79,37 +79,44 @@ public class ExtensionLoader<T> {
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
     /**
-     * 用于缓存，所有扩展加载实例。
+     * Dubbo 中一个扩展接口对应一个 ExtensionLoader 实例，该集合缓存了全部 ExtensionLoader 实例，其中的 Key 为扩展接口，Value 为加载其扩展实现的 ExtensionLoader 实例。
      */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
 
     /**
-     * 扩展实现类集合, key 为 Protocol , value 为 DubboProtocol
+     *  该集合缓存了扩展实现类与其实例对象的映射关系。在前文示例中，Key 为 Class，Value 为 DubboProtocol 对象。
+     *
+     *   例如：扩展实现类集合, key 为 Protocol , value 为 DubboProtocol
      */
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
 
     // ==============================
 
     /**
-     * 扩展接口, 比如 Protocol
+     * 当前 ExtensionLoader 实例负责加载扩展接口, 比如 Protocol
      */
     private final Class<?> type;
 
     private final ExtensionFactory objectFactory;
 
+    /*
+     * 缓存了该 ExtensionLoader 加载的扩展实现类与扩展名之间的映射关系。
+     */
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
 
     /**
      * 则获取class上的 `SPI` 注解，根据该注解的定义的name作为key
+     *    缓存了该 ExtensionLoader 加载的扩展名与扩展实现类之间的映射关系。cachedNames 集合的反向关系缓存。
      *
-     *  1、例如: DubboProtocol （没有Adaptive注解，同时只有无参构造器）
+     *    1、例如: DubboProtocol （没有Adaptive注解，同时只有无参构造器）
      */
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
 
     /**
-     * 缓存的扩展对象集合 key 为 dubbo, value 为 DubboProtocol
+     * 缓存了该 ExtensionLoader 加载的扩展名与扩展实现对象之间的映射关系。
+     *   例如: 缓存的扩展对象集合 key 为 dubbo, value 为 DubboProtocol
      */
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
 
@@ -124,6 +131,10 @@ public class ExtensionLoader<T> {
      *  1、例如: AdaptiveCompiler (如果这个class含有Adaptive注解)
      */
     private volatile Class<?> cachedAdaptiveClass = null;
+
+    /*
+     * 记录了 type 这个扩展接口上 @SPI 注解的 value 值，也就是默认扩展名。
+     */
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
 
@@ -277,6 +288,8 @@ public class ExtensionLoader<T> {
             // 遍历实现类
             for (Map.Entry<String, Object> entry : cachedActivates.entrySet()) {
                 String name = entry.getKey();
+
+                // @Activate注解
                 Object activate = entry.getValue();
 
                 String[] activateGroup, activateValue;
@@ -295,26 +308,39 @@ public class ExtensionLoader<T> {
                 // 当前扩展实现组与我们传入 Group 匹配，且 value 值在 URL 中存在。
                 if (isMatchGroup(group, activateGroup)) {
                     T ext = getExtension(name);
+                    //  没有出现在values配置中的，即为默认激活的扩展实现
                     if (!names.contains(name)
+
+                            // 通过"-"明确指定不激活该扩展实现
                             && !names.contains(REMOVE_VALUE_PREFIX + name)
 
                             /**
-                             * {@link #isActive(String[], URL)}
+                             *  检测URL中是否出现了指定的Key {@link #isActive(String[], URL)}
                              */
                             && isActive(activateValue, url)) {
+
+                        // 加载扩展实现的实例对象，这些都是激活的
                         exts.add(ext);
                     }
                 }
             }
+
+            // 按照 @Activate 注解中的 order 属性对默认激活的扩展集合进行排序。
             exts.sort(ActivateComparator.COMPARATOR);
         }
         List<T> usrs = new ArrayList<>();
+
+        // 按序添加自定义扩展实现类的对象。
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
+
+            // 通过"-"开头的配置明确指定不激活的扩展实现，直接就忽略了
             if (!name.startsWith(REMOVE_VALUE_PREFIX)
                     && !names.contains(REMOVE_VALUE_PREFIX + name)) {
                 if (DEFAULT_KEY.equals(name)) {
                     if (!usrs.isEmpty()) {
+
+                        // 按照顺序，将自定义的扩展添加到默认扩展集合前面
                         exts.addAll(0, usrs);
                         usrs.clear();
                     }
@@ -325,6 +351,8 @@ public class ExtensionLoader<T> {
             }
         }
         if (!usrs.isEmpty()) {
+
+            // 按照顺序，将自定义的扩展添加到默认扩展集合后面
             exts.addAll(usrs);
         }
         return exts;
@@ -437,12 +465,12 @@ public class ExtensionLoader<T> {
         }
 
         /**
-         * 根据 name 从缓存的扩展类对象获取 {@link #getOrCreateHolder(String)}
+         * 根据 name 查找 cachedInstances 缓存的逻辑  {@link #getOrCreateHolder(String)}
          */
         Holder<Object> holder = getOrCreateHolder(name);
         Object instance = holder.get();
 
-        // 缓存中没有对应的实例
+        // / double-check 防止并发问题
         if (instance == null) {
             synchronized (holder) {
                 instance = holder.get();
@@ -649,10 +677,15 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
         /**
-         * 通过 name获取ExtensionClasses。
+         *
+         *  获取 cachedClasses 缓存，根据扩展名从 cachedClasses 缓存中获取扩展实现类。如果 cachedClasses 未初始化，
+         *  则会扫描前面介绍的三个 SPI 目录获取查找相应的 SPI 配置文件，然后加载其中的扩展实现类，
+         *  最后将扩展名和扩展实现类的映射关系记录到 cachedClasses 缓存中。这部分逻辑在 loadExtensionClasses() 和 loadDirectory() 方法中。
+         *
+         *
+         * 通过 name获取ExtensionClasses。 {@link #getExtensionClasses()}
          *
          *   例如：name: Protocol.  clazz: DubboProtocol
-         *  {@link #getExtensionClasses()}
          */
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
@@ -660,7 +693,9 @@ public class ExtensionLoader<T> {
         }
         try {
 
-            // 如果缓存中不存在实例，则使用 Class 创建实例。
+            /*
+             * 根据扩展实现类从 EXTENSION_INSTANCES 缓存中查找相应的实例。如果查找失败，会通过反射创建扩展实现对象。
+             */
             T instance = (T) EXTENSION_INSTANCES.get(clazz);
             if (instance == null) {
 
@@ -670,12 +705,12 @@ public class ExtensionLoader<T> {
             }
 
             /**
-             *  dubbo的IOC反转控制，就是从spi和spring里面提取对象赋值。
-             *  注入依赖的扩展类对象 {@link #injectExtension(Object)}
+             *  dubbo的 IOC反转控制，就是从spi和spring里面提取对象赋值。
+             *  自动装配扩展实现对象中的属性（即调用其 setter） {@link #injectExtension(Object)}
              */
             injectExtension(instance);
 
-            // Wrapper 对扩展实现进行功能增强。
+            // Wrapper 对扩展实现进行功能增强。( 自动包装扩展实现对象 )
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
             if (CollectionUtils.isNotEmpty(wrapperClasses)) {
                 for (Class<?> wrapperClass : wrapperClasses) {
@@ -989,7 +1024,7 @@ public class ExtensionLoader<T> {
         if (clazz.isAnnotationPresent(Adaptive.class)) {
 
             /**
-             * {@link #cacheAdaptiveClass(Class)}
+             *  缓存到cachedAdaptiveClass字段 {@link #cacheAdaptiveClass(Class)}
              */
             cacheAdaptiveClass(clazz);
 
@@ -1017,12 +1052,16 @@ public class ExtensionLoader<T> {
 
             String[] names = NAME_SEPARATOR.split(name);
             if (ArrayUtils.isNotEmpty(names)) {
+
+                // 将包含@Activate注解的实现类缓存到cachedActivates集合中
                 cacheActivateClass(clazz, names[0]);
                 for (String n : names) {
+
+                    // 在cachedNames集合中缓存实现类->扩展名的映射
                     cacheName(clazz, n);
 
                     /**
-                     *  保存 Extension {@link #saveInExtensionClass(Map, Class, String)}
+                     *  在cachedClasses集合中缓存扩展名->实现类的映射 {@link #saveInExtensionClass(Map, Class, String)}
                      */
                     saveInExtensionClass(extensionClasses, clazz, name);
                 }
