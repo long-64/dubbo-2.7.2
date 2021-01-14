@@ -18,6 +18,7 @@ package org.apache.dubbo.registry.support;
 
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.timer.HashedWheelTimer;
+import org.apache.dubbo.common.timer.Timeout;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.NamedThreadFactory;
 import org.apache.dubbo.registry.NotifyListener;
@@ -44,27 +45,37 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
+ *
+ *  失败重试策略。
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
 
     /*  retry task map */
-
+    // 注册失败的 URL 集合，其中 Key 是注册失败的 URL，Value 是对应的重试任务。
     private final ConcurrentMap<URL, FailedRegisteredTask> failedRegistered = new ConcurrentHashMap<URL, FailedRegisteredTask>();
 
+    // 取消注册失败的 URL 集合，其中 Key 是取消注册失败的 URL，Value 是对应的重试任务。
     private final ConcurrentMap<URL, FailedUnregisteredTask> failedUnregistered = new ConcurrentHashMap<URL, FailedUnregisteredTask>();
 
+    // 订阅失败 URL 集合，其中 Key 是订阅失败的 URL + Listener 集合，Value 是相应的重试任务。
     private final ConcurrentMap<Holder, FailedSubscribedTask> failedSubscribed = new ConcurrentHashMap<Holder, FailedSubscribedTask>();
 
+    // 取消订阅失败的 URL 集合，其中 Key 是取消订阅失败的 URL + Listener 集合，Value 是相应的重试任务。
     private final ConcurrentMap<Holder, FailedUnsubscribedTask> failedUnsubscribed = new ConcurrentHashMap<Holder, FailedUnsubscribedTask>();
 
+    // 通知失败的 URL 集合，其中 Key 是通知失败的 URL + Listener 集合，Value 是相应的重试任务。
     private final ConcurrentMap<Holder, FailedNotifiedTask> failedNotified = new ConcurrentHashMap<Holder, FailedNotifiedTask>();
 
     /**
      * The time in milliseconds the retryExecutor will wait
+     *
+     * 重试操作的时间间隔
      */
     private final int retryPeriod;
 
     // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+
+    // 用于定时执行失败重试操作的时间轮。
     private final HashedWheelTimer retryTimer;
 
     public FailbackRegistry(URL url) {
@@ -100,13 +111,26 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     private void addFailedRegistered(URL url) {
         FailedRegisteredTask oldOne = failedRegistered.get(url);
+
+        // 已经存在重试任务，则无须创建，直接返回
         if (oldOne != null) {
             return;
         }
+
+        /**
+         * 构造 `FailedRegisteredTask` 继承 AbstractRetryTask -> `TimerTask`
+         *
+         *  【 core】{@link org.apache.dubbo.registry.retry.AbstractRetryTask#run(Timeout)}
+         */
         FailedRegisteredTask newTask = new FailedRegisteredTask(url, this);
         oldOne = failedRegistered.putIfAbsent(url, newTask);
         if (oldOne == null) {
             // never has a retry task. then start a new task for retry.
+
+            /**
+             * 【 添加时间轮 】
+             * 如果是新建的重试任务，则提交到时间轮中，等待retryPeriod毫秒后执行
+             */
             retryTimer.newTimeout(newTask, retryPeriod, TimeUnit.MILLISECONDS);
         }
     }
@@ -229,7 +253,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     @Override
     public void register(URL url) {
         super.register(url);
+
+        // 清理FailedRegisteredTask定时任务
         removeFailedRegistered(url);
+
+        // 清理FailedUnregisteredTask定时任务
         removeFailedUnregistered(url);
         try {
             // Sending a registration request to the server side
@@ -263,8 +291,8 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
             // Record a failed registration request to a failed list, retry regularly
 
-            /*
-             * 将失败的注册请求记录到失败列表，定时重试
+            /**
+             * 将失败的注册请求记录到失败列表，定时重试 {@link #addFailedRegistered(URL)}
              */
             addFailedRegistered(url);
         }

@@ -82,8 +82,20 @@ public abstract class AbstractRegistry implements Registry {
     private final AtomicLong lastCacheChanged = new AtomicLong();
     private final AtomicInteger savePropertiesRetryTimes = new AtomicInteger();
     private final Set<URL> registered = new ConcurrentHashSet<>();
+
+    /**
+     * 表示订阅 URL 的监听器集合，其中 Key 是被监听的 URL， Value 是相应的监听器集合。
+     */
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
+
+    /**
+     * 该集合第一层 Key 是当前节点作为 Consumer 的一个 URL，表示的是该节点的某个 Consumer 角色（一个节点可以同时消费多个 Provider 节点）；Value 是一个 Map 集合
+     */
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<>();
+
+    /*
+     * 该 URL 包含了创建该 Registry 对象的全部配置信息，是 AbstractRegistryFactory 修改后的产物
+     */
     private URL registryUrl;
     // Local disk cache file
     private File file;
@@ -243,6 +255,12 @@ public abstract class AbstractRegistry implements Registry {
         return null;
     }
 
+    /**
+     * [ 能够查询符合条件的注册数据]  它与 subscribe() 方法有一定的区别，subscribe() 方法采用的是 push 模式，lookup() 方法采用的是 pull 模式。
+     *
+     * @param url Query condition, is not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     * @return
+     */
     @Override
     public List<URL> lookup(URL url) {
         List<URL> result = new ArrayList<>();
@@ -271,6 +289,15 @@ public abstract class AbstractRegistry implements Registry {
         return result;
     }
 
+    /**
+     *
+     *  将当前节点要注册的 URL 缓存到 registered 集合
+     *
+     * @param url  Registration information , is not allowed to be empty, e.g:
+     *
+     *              dubbo://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     *
+     */
     @Override
     public void register(URL url) {
         if (url == null) {
@@ -401,7 +428,13 @@ public abstract class AbstractRegistry implements Registry {
         // keep every provider's category.
         Map<String, List<URL>> result = new HashMap<>();
         for (URL u : urls) {
+
+            /**
+             * 需要Consumer URL与Provider URL匹配 {@link org.apache.dubbo.common.utils.UrlUtils#isMatch(URL, URL)}
+             */
             if (UrlUtils.isMatch(url, u)) {
+
+                // 根据Provider URL中的category参数进行分类
                 String category = u.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY);
                 List<URL> categoryList = result.computeIfAbsent(category, k -> new ArrayList<>());
                 categoryList.add(u);
@@ -415,9 +448,15 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
+
+            /**
+             * 调用 NotifyListener {@link org.apache.dubbo.registry.integration.RegistryDirectory#notify(List)}
+             */
             listener.notify(categoryList);
             // We will update our cache file after each notification.
             // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.
+
+            // 更新properties集合以及底层的文件缓存
             saveProperties(url);
         }
     }

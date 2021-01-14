@@ -63,14 +63,23 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         try {
             int timeout = url.getParameter(TIMEOUT_KEY, 5000);
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
+
+                    //zk地址(包括备用地址)
                     .connectString(url.getBackupAddress())
+
+                    // 重试配置
                     .retryPolicy(new RetryNTimes(1, 1000))
+                    // 连接超时时长
                     .connectionTimeoutMs(timeout);
             String authority = url.getAuthority();
             if (authority != null && authority.length() > 0) {
                 builder = builder.authorization("digest", authority.getBytes());
             }
+
+            // 省略处理身份验证的逻辑
             client = builder.build();
+
+            // 添加连接状态的监听
             client.getConnectionStateListenable().addListener(new ConnectionStateListener() {
                 @Override
                 public void stateChanged(CuratorFramework client, ConnectionState state) {
@@ -289,6 +298,13 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             }
         }
 
+        /**
+         * 它实现了 TreeCacheListener 接口，可以添加到 TreeCache 上监听自身节点以及子节点的变化。
+         *   在 childEvent() 方法的实现中我们可以看到，当 TreeCache 关注的树型结构发生变化时
+         * @param client
+         * @param event
+         * @throws Exception
+         */
         @Override
         public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
             if (dataListener != null) {
@@ -328,6 +344,10 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                         break;
 
                 }
+
+                /**
+                 * 回调DataListener，传递触发事件的path、节点内容以及事件类型 {@link org.apache.dubbo.configcenter.support.zookeeper.CacheListener#dataChanged(String, Object, EventType)}
+                 */
                 dataListener.dataChanged(path, content, eventType);
             }
         }

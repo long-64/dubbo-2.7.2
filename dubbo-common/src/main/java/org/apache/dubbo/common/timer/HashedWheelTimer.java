@@ -398,6 +398,10 @@ public class HashedWheelTimer implements Timer {
     /**
      *  【 提交定时任务 】
      *
+     *   主要体现
+     *      1、失败重试， 例如，Provider 向注册中心进行注册失败时的重试操作，或是 Consumer 向注册中心订阅时的失败重试等
+     *      2、周期性定时任务， 例如，定期发送心跳请求，请求超时的处理，或是网络连接断开后的重连机制。
+     *
      * @param task
      * @param delay
      * @param unit

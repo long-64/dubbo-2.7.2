@@ -39,6 +39,8 @@ public interface Serialization {
      * Get content type unique id, recommended that custom implementations use values greater than 20.
      *
      * @return content type id
+     *
+     *  获取ContentType的ID值，是一个byte类型的值，唯一确定一个算法
      */
     byte getContentTypeId();
 
@@ -46,6 +48,8 @@ public interface Serialization {
      * Get content type
      *
      * @return content type
+     *
+     *  每一种序列化算法都对应一个ContentType，该方法用于获取ContentType
      */
     String getContentType();
 
@@ -56,6 +60,9 @@ public interface Serialization {
      * @param output the underlying output stream
      * @return serializer
      * @throws IOException
+     *
+     *  创建一个ObjectOutput对象，ObjectOutput负责实现序列化的功能，即将Java
+     *      对象转化为字节序列
      */
     @Adaptive
     ObjectOutput serialize(URL url, OutputStream output) throws IOException;
@@ -67,6 +74,9 @@ public interface Serialization {
      * @param input the underlying input stream
      * @return deserializer
      * @throws IOException
+     *
+     *    创建一个ObjectInput对象，ObjectInput负责实现反序列化的功能，即将
+     *     字节序列转换成Java对象
      */
     @Adaptive
     ObjectInput deserialize(URL url, InputStream input) throws IOException;

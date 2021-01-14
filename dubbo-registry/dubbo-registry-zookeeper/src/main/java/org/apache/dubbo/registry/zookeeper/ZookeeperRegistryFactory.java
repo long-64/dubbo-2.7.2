@@ -37,8 +37,17 @@ public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
         this.zookeeperTransporter = zookeeperTransporter;
     }
 
+    /**
+     * zk 注册中心
+     * @param url
+     * @return
+     */
     @Override
     public Registry createRegistry(URL url) {
+
+        /**
+         * [ core ] {@link ZookeeperRegistry#ZookeeperRegistry(URL, ZookeeperTransporter)}
+         */
         return new ZookeeperRegistry(url, zookeeperTransporter);
     }
 

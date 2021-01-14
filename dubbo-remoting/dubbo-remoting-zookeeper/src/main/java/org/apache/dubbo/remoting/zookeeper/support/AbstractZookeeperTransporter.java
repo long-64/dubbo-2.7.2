@@ -52,6 +52,10 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
     @Override
     public ZookeeperClient connect(URL url) {
         ZookeeperClient zookeeperClient;
+
+        /**
+         * 获取地址。包含: 备用地址。{@link #getURLBackupAddress(URL)}
+         */
         List<String> addressList = getURLBackupAddress(url);
         // The field define the zookeeper server , including protocol, host, port, username, password
         if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
@@ -66,7 +70,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
             }
 
             /**
-             * {@link org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient#CuratorZookeeperClient
+             *  初始化 Curator 客户端并阻塞等待连接成功 {@link org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient#CuratorZookeeperClient
              */
             zookeeperClient = createZookeeperClient(toClientURL(url));
             logger.info("No valid zookeeper client found from cache, therefore create a new client for url. " + url);

@@ -31,14 +31,24 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 
+
+/**
+ *  AbstractZookeeperClient 设计泛型的原因
+ *  1、这是因为不同的 ZookeeperClient 实现可能依赖不同的 Zookeeper 客户端组件，不同 Zookeeper 客户端组件的监听器实现也有所不同，
+ *
+ * @param <TargetDataListener>
+ * @param <TargetChildListener>
+ */
 public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildListener> implements ZookeeperClient {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractZookeeperClient.class);
 
     private final URL url;
 
+    // 主要负责监听 Dubbo 与 Zookeeper 集群的连接状态，包括 SESSION_LOST、CONNECTED、RECONNECTED、SUSPENDED 和 NEW_SESSION_CREATED。
     private final Set<StateListener> stateListeners = new CopyOnWriteArraySet<StateListener>();
 
+    // 主要监听某个 ZNode 节点下的子节点变化
     private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
 
     private final ConcurrentMap<String, ConcurrentMap<DataListener, TargetDataListener>> listeners = new ConcurrentHashMap<String, ConcurrentMap<DataListener, TargetDataListener>>();
@@ -112,16 +122,22 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     @Override
     public void addDataListener(String path, DataListener listener, Executor executor) {
+
+        // 获取指定path上的DataListener集合
         ConcurrentMap<DataListener, TargetDataListener> dataListenerMap = listeners.get(path);
         if (dataListenerMap == null) {
             listeners.putIfAbsent(path, new ConcurrentHashMap<DataListener, TargetDataListener>());
             dataListenerMap = listeners.get(path);
         }
+
+        // 查询该DataListener关联的TargetDataListener
         TargetDataListener targetListener = dataListenerMap.get(listener);
         if (targetListener == null) {
             dataListenerMap.putIfAbsent(listener, createTargetDataListener(path, listener));
             targetListener = dataListenerMap.get(listener);
         }
+
+        // 通过TargetDataListener在指定的path上添加监听
         addTargetDataListener(path, targetListener, executor);
     }
 

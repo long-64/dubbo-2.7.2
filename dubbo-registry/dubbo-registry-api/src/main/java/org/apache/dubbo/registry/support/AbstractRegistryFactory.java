@@ -38,6 +38,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
  * AbstractRegistryFactory. (SPI, Singleton, ThreadSafe)
  *
  * @see org.apache.dubbo.registry.RegistryFactory
+ *
+ *   【 是一个实现了 RegistryFactory 接口的抽象类，提供了规范 URL 的操作以及缓存 Registry 对象的公共能力 】
  */
 public abstract class AbstractRegistryFactory implements RegistryFactory {
 

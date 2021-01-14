@@ -25,6 +25,7 @@ import org.apache.dubbo.common.extension.SPI;
  *
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
  *
+ *   【 Registry 的工厂接口，负责创建 Registry 对象 】
  *
  *
  *  public class RegistryFactory$Adaptive
@@ -45,7 +46,7 @@ import org.apache.dubbo.common.extension.SPI;
  *                 .getExtension(extName);
  *         return extension.getRegistry(arg0);
  *     }
- * }
+ *  }
  *
  *
  */

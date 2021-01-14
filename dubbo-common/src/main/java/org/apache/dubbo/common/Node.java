@@ -25,6 +25,8 @@ public interface Node {
      * get url.
      *
      * @return url.
+     *
+     *  方法返回表示当前节点的 URL
      */
     URL getUrl();
 
@@ -32,11 +34,15 @@ public interface Node {
      * is available.
      *
      * @return available.
+     *
+     *  检测当前节点是否可用
      */
     boolean isAvailable();
 
     /**
      * destroy.
+     *
+     * 方法负责销毁当前节点并释放底层资源
      */
     void destroy();
 

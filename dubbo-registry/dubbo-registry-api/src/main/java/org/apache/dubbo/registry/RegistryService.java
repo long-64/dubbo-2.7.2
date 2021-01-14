@@ -25,6 +25,8 @@ import java.util.List;
  *
  * @see org.apache.dubbo.registry.Registry
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
+ *
+ *  【 抽象了注册服务的基本行为 】
  */
 public interface RegistryService {
 
@@ -39,6 +41,10 @@ public interface RegistryService {
      * 5. Allow URLs which have the same URL but different parameters to coexist,they can't cover each other.<br>
      *
      * @param url  Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     *
+     *
+     *             注册 URL
+     *
      */
     void register(URL url);
 
@@ -50,6 +56,8 @@ public interface RegistryService {
      * 2. Unregister according to the full url match.<br>
      *
      * @param url Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     *
+     *            取消 URL
      */
     void unregister(URL url);
 
@@ -67,6 +75,8 @@ public interface RegistryService {
      *
      * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
      * @param listener A listener of the change event, not allowed to be empty
+     *
+     *            订阅，（ 注册中心会主动通知第二个参数指定的 NotifyListener 对象，NotifyListener 接口中定义的 notify() 方法就是用来接收该通知的 ）
      */
     void subscribe(URL url, NotifyListener listener);
 
@@ -79,6 +89,8 @@ public interface RegistryService {
      *
      * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
      * @param listener A listener of the change event, not allowed to be empty
+     *
+     *            取消订阅
      */
     void unsubscribe(URL url, NotifyListener listener);
 
@@ -88,6 +100,8 @@ public interface RegistryService {
      * @param url Query condition, is not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
      * @return The registered information list, which may be empty, the meaning is the same as the parameters of {@link org.apache.dubbo.registry.NotifyListener#notify(List<URL>)}.
      * @see org.apache.dubbo.registry.NotifyListener#notify(List)
+     *
+     *  它与 subscribe() 方法有一定的区别，subscribe() 方法采用的是 push 模式，lookup() 方法采用的是 pull 模式。
      */
     List<URL> lookup(URL url);
 

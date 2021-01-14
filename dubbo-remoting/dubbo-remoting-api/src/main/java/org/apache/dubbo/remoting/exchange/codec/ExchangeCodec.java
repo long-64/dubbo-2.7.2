@@ -297,7 +297,7 @@ public class ExchangeCodec extends TelnetCodec {
 
         // set request and serialization flag.
 
-        // 设置头类型与序列化类型、标记到协议头
+        // 设置头类型与序列化类型、标记到协议头 ( contentTypeId 序列化的ID）
         header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
 
         if (req.isTwoWay()) {
