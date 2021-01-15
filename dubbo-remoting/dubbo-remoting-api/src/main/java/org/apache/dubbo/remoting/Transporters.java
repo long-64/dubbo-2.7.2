@@ -24,6 +24,8 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 
 /**
  * Transporter facade. (API, Static, ThreadSafe)
+ *
+ *  门面类。
  */
 public class Transporters {
 
@@ -52,7 +54,13 @@ public class Transporters {
             handler = handlers[0];
         } else {
 
-            // 如果 handlers 元素数量大于1，则创建 ChannelHandler 分发器
+            /**
+             * 1、如果 handlers 元素数量大于1，则创建 ChannelHandler 分发器,
+             * 2、ChannelHandlerDispatcher 也是 ChannelHandler 接口的实现类之一，
+             *     维护了一个 CopyOnWriteArraySet 集合，它所有的 ChannelHandler 接口实现都会调用其中每个 ChannelHandler 元素的相应方法。
+             *
+             *  {@link ChannelHandlerDispatcher#ChannelHandlerDispatcher(ChannelHandler...)}
+             */
             handler = new ChannelHandlerDispatcher(handlers);
         }
 
@@ -92,7 +100,15 @@ public class Transporters {
         return getTransporter().connect(url, handler);
     }
 
+    /**
+     *  获取 `Transporter`
+     * @return
+     */
     public static Transporter getTransporter() {
+
+        /**
+         *  `默认 netty4` {@link org.apache.dubbo.remoting.transport.netty4.NettyTransporter}
+         */
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }
 

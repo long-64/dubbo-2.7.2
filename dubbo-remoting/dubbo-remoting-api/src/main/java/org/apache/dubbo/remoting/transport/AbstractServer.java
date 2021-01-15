@@ -50,8 +50,12 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
     ExecutorService executor;
+
+    // 分别对应该 Server 的本地地址和绑定的地址，都是从 URL 中的参数中获取。bindAddress 默认值与 localAddress 一致
     private InetSocketAddress localAddress;
     private InetSocketAddress bindAddress;
+
+    // 该 Server 能接收的最大连接数，从 URL 的 accepts 参数中获取，默认值为 0，表示没有限制。
     private int accepts;
     private int idleTimeout;
 
@@ -66,6 +70,8 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
             bindIp = ANYHOST_VALUE;
         }
         bindAddress = new InetSocketAddress(bindIp, bindPort);
+
+        // 初始化 accepts。
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
         this.idleTimeout = url.getParameter(IDLE_TIMEOUT_KEY, DEFAULT_IDLE_TIMEOUT);
         try {
@@ -83,6 +89,10 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         }
         //fixme replace this with better method
         DataStore dataStore = ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension();
+
+        /**
+         *  获取该Server关联的线程池
+         */
         executor = (ExecutorService) dataStore.get(Constants.EXECUTOR_SERVICE_COMPONENT_KEY, Integer.toString(url.getPort()));
     }
 

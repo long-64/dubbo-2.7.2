@@ -69,7 +69,11 @@ final public class NettyCodecAdapter {
 
         @Override
         protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
+
+            //  将ByteBuf封装成统一的ChannelBuffer
             org.apache.dubbo.remoting.buffer.ChannelBuffer buffer = new NettyBackedChannelBuffer(out);
+
+            // 拿到关联的Channel
             Channel ch = ctx.channel();
             NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
             try {
@@ -94,15 +98,18 @@ final public class NettyCodecAdapter {
 
             ChannelBuffer message = new NettyBackedChannelBuffer(input);
 
+            // 拿到关联的Channel
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
 
             try {
                 // decode object.
                 do {
+
+                    // 记录当前readerIndex的位置
                     int saveReaderIndex = message.readerIndex();
 
                     /**
-                     * {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#decode(org.apache.dubbo.remoting.Channel, ChannelBuffer)}
+                     *  委托给Codec2进行解码 {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec#decode(org.apache.dubbo.remoting.Channel, ChannelBuffer)}
                      */
                     Object msg = codec.decode(channel, message);
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {

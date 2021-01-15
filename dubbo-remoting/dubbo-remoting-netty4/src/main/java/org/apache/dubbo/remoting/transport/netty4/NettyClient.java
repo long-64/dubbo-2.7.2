@@ -76,7 +76,9 @@ public class NettyClient extends AbstractClient {
     @Override
     protected void doOpen() throws Throwable {
 
-        // 创建业务 handler
+        /**
+         * 创建业务 handler {@link NettyClientHandler#NettyClientHandler(URL, ChannelHandler)}
+         */
         final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
 
         // 创建启动器并配置
@@ -89,6 +91,7 @@ public class NettyClient extends AbstractClient {
                 .channel(NioSocketChannel.class);
 
         if (getConnectTimeout() < 3000) {
+            // 设置连接超时时间，这里使用到AbstractEndpoint中的connectTimeout字段
             bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
         } else {
             bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getConnectTimeout());

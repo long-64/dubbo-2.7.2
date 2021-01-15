@@ -34,11 +34,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * NettyServerHandler
+ *
+ *   继承 `ChannelDuplexHandler` 这是 Netty 提供的一个同时处理 Inbound 数据和 Outbound 数据的 ChannelHandler
  */
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler {
     private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
 
+    // 核心字段
     private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>(); // <ip:port, channel>
 
     private final URL url;

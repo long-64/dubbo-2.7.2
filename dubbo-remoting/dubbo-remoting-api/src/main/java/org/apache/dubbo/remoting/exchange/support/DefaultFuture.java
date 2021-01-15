@@ -97,9 +97,13 @@ public class DefaultFuture extends CompletableFuture<Object> {
         /**
          * 创建一个任务 {@link TimeoutCheckTask#TimeoutCheckTask(Long)}
          *
-         *  core function {@link TimeoutCheckTask#run(Timeout)}
+         *  【 core function 】 {@link TimeoutCheckTask#run(Timeout)}
          */
         TimeoutCheckTask task = new TimeoutCheckTask(future.getId());
+
+        /**
+         * 提交时间轮。进行处理。{@link HashedWheelTimer#newTimeout(TimerTask, long, TimeUnit)}
+         */
         future.timeoutCheckTask = TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);
     }
 
@@ -122,7 +126,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
         // timeout check
 
         /**
-         * 超时检查
+         * 超时检查 {@link #timeoutCheck(DefaultFuture)}
          */
         timeoutCheck(future);
         return future;
@@ -223,8 +227,14 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
         // 调用成功
         if (res.getStatus() == Response.OK) {
+
+            /**
+             *  异步处理 Response#Result()
+             */
             this.complete(res.getResult());
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
+
+            // 异常处理。
             this.completeExceptionally(new TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, channel, res.getErrorMessage()));
         } else {
             this.completeExceptionally(new RemotingException(channel, res.getErrorMessage()));
@@ -286,7 +296,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
             }
             // create exception response.
 
-            // 创建相应对象。
+            // 创建相应对象。【 Exchange - Response 】
             Response timeoutResponse = new Response(future.getId());
             // set timeout status.
 

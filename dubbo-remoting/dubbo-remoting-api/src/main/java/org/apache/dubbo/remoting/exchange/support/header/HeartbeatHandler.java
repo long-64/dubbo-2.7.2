@@ -27,6 +27,10 @@ import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 import org.apache.dubbo.remoting.transport.AbstractChannelHandlerDelegate;
 
+/**
+ * 专门处理心跳消息的 ChannelHandler 实现。在 HeartbeatHandler.received() 方法接收心跳请求的时候，
+ *      会生成相应的心跳响应并返回；在收到心跳响应的时候，会打印相应的日志；在收到其他类型的消息时，会传递给底层的 ChannelHandler 对象进行处理。
+ */
 public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger logger = LoggerFactory.getLogger(HeartbeatHandler.class);

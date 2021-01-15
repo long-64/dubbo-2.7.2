@@ -111,6 +111,12 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         });
     }
 
+    /**
+     * 发送心跳消息。
+     * @param ctx
+     * @param evt
+     * @throws Exception
+     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
@@ -122,7 +128,12 @@ public class NettyClientHandler extends ChannelDuplexHandler {
                 Request req = new Request();
                 req.setVersion(Version.getProtocolVersion());
                 req.setTwoWay(true);
+                // 发送心跳请求
                 req.setEvent(Request.HEARTBEAT_EVENT);
+
+                /**
+                 *  发送消息 {@link NettyChannel#send(Object)}
+                 */
                 channel.send(req);
             } finally {
                 NettyChannel.removeChannelIfDisconnected(ctx.channel());

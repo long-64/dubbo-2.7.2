@@ -47,21 +47,37 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         super(url, handler);
+
+        // 根据URL中的codec参数值，确定此处具体的Codec2实现类
         this.codec = getChannelCodec(url);
+
+        // 根据URL中的timeout参数确定timeout字段的值，默认1000
         this.timeout = url.getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+
+        // 根据URL中的connect.timeout参数确定connectTimeout字段的值，默认3000
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
 
     protected static Codec2 getChannelCodec(URL url) {
+
+        // 根据URL的codec参数获取扩展名
         String codecName = url.getParameter(Constants.CODEC_KEY, "telnet");
+
+        // 通过ExtensionLoader加载并实例化Codec2的具体扩展实现
         if (ExtensionLoader.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
             return ExtensionLoader.getExtensionLoader(Codec2.class).getExtension(codecName);
         } else {
+
+            // Codec2接口不存在相应的扩展名，就尝试从Codec这个老接口的扩展名中查找，目前Codec接口已经废弃了，所以省略这部分逻辑
             return new CodecAdapter(ExtensionLoader.getExtensionLoader(Codec.class)
                     .getExtension(codecName));
         }
     }
 
+    /**
+     * 就是根据传入的 URL 参数重置 AbstractEndpoint 的三个字段
+     * @param url
+     */
     @Override
     public void reset(URL url) {
         if (isClosed()) {
