@@ -41,10 +41,19 @@ import static org.apache.dubbo.remoting.Constants.TICKS_PER_WHEEL;
 
 /**
  * DefaultMessageClient
+ *
+ *  是 Client 装饰器
+ *
+ *  功能:
+ *    1、维持与 Server 的长连状态，这是通过定时发送心跳消息实现的
+ *    2、在因故障掉线之后，进行重连，这是通过定时检查连接状态实现的。
  */
 public class HeaderExchangeClient implements ExchangeClient {
 
+    // 被修饰的 Client 对象。HeaderExchangeClient 中对 Client 接口的实现，都会委托给该对象进行处理
     private final Client client;
+
+    // HeaderExchangeClient 中对 ExchangeChannel 接口的实现，都会委托给该对象进行处理。
     private final ExchangeChannel channel;
 
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(
@@ -60,6 +69,10 @@ public class HeaderExchangeClient implements ExchangeClient {
         if (startTimer) {
             URL url = client.getUrl();
             startReconnectTask(url);
+
+            /**
+             * 心跳定时任务 {@link #startHeartBeatTask(URL)}
+             */
             startHeartBeatTask(url);
         }
     }
@@ -132,8 +145,18 @@ public class HeaderExchangeClient implements ExchangeClient {
     @Override
     public void close(int timeout) {
         // Mark the client into the closure process
+
+        // 将closing字段设置为true
         startClose();
+
+        /**
+         * 关闭心跳定时任务和重连定时任务 {@link #doClose()}
+         */
         doClose();
+
+        /**
+         *  关闭HeaderExchangeChannel {@link HeaderExchangeChannel#close(int)}
+         */
         channel.close(timeout);
     }
 
@@ -179,16 +202,32 @@ public class HeaderExchangeClient implements ExchangeClient {
         return channel.hasAttribute(key);
     }
 
+    /**
+     * 心跳定时任务。
+     * @param url
+     */
     private void startHeartBeatTask(URL url) {
+
+        // // Client的具体实现决定是否启动该心跳任务
         if (!client.canHandleIdle()) {
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+
+            // 计算心跳间隔，最小间隔不能低于1s
             int heartbeat = getHeartbeat(url);
             long heartbeatTick = calculateLeastDuration(heartbeat);
+
+            // 创建心跳任务 (时间轮)
             this.heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);
+
+            // 提交到IDLE_CHECK_TIMER这个时间轮中等待执行
             IDLE_CHECK_TIMER.newTimeout(heartBeatTimerTask, heartbeatTick, TimeUnit.MILLISECONDS);
         }
     }
 
+    /**
+     * 重连定时任务
+     * @param url
+     */
     private void startReconnectTask(URL url) {
         if (shouldReconnect(url)) {
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);

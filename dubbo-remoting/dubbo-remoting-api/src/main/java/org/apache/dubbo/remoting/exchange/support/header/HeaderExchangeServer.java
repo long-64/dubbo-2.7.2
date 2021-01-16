@@ -105,23 +105,36 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void close(final int timeout) {
+
+        // 将底层RemotingServer的closing字段设置为true，表示当前Server正在关闭，不再接收连接
         startClose();
         if (timeout > 0) {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
+
+                // 发送ReadOnly事件请求通知客户端
                 sendChannelReadOnlyEvent();
             }
             while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
+                    // 循环等待客户端断开连接
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
                     logger.warn(e.getMessage(), e);
                 }
             }
         }
+
+        /**
+         * 将自身closed字段设置为true，取消CloseTimerTask定时任务 {@link #doClose()}
+         */
         doClose();
+
+        /**
+         * 关闭 Transport 层的Server {@link org.apache.dubbo.remoting.transport.AbstractServer#close(int)}
+         */
         server.close(timeout);
     }
 

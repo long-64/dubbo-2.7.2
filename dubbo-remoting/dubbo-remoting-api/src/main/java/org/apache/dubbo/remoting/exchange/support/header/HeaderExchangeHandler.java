@@ -39,6 +39,8 @@ import java.util.concurrent.CompletionStage;
 
 /**
  * ExchangeReceiver
+ *
+ *  ExchangeHandler 的装饰器
  */
 public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
@@ -137,6 +139,8 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     @Override
     public void connected(Channel channel) throws RemotingException {
+
+        // 记录时间戳，心跳检测使用。
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         channel.setAttribute(KEY_WRITE_TIMESTAMP, System.currentTimeMillis());
         ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
@@ -153,6 +157,8 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     @Override
     public void disconnected(Channel channel) throws RemotingException {
+
+        // 记录时间戳，心跳检测使用。
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         channel.setAttribute(KEY_WRITE_TIMESTAMP, System.currentTimeMillis());
         ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
@@ -196,6 +202,8 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
+
+        // 记录时间戳，心跳检测使用。
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {

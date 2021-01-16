@@ -169,6 +169,10 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 }
                 for (ExchangeClient client : clients) {
                     try {
+
+                        /**
+                         *  关闭链接 {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeClient#close(int)}
+                         */
                         client.close(ConfigurationUtils.getServerShutdownTimeout());
                     } catch (Throwable t) {
                         logger.warn(t.getMessage(), t);

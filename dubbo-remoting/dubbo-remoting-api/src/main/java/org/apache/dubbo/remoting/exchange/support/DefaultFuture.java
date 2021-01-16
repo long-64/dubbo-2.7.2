@@ -126,7 +126,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
         // timeout check
 
         /**
-         * 超时检查 {@link #timeoutCheck(DefaultFuture)}
+         * 超时检查（定时任务，进行check） {@link #timeoutCheck(DefaultFuture)}
          */
         timeoutCheck(future);
         return future;
