@@ -67,6 +67,8 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Exporter<T> export(final Invoker<T> invoker) throws RpcException {
+
+        // 首先查询exporterMap集合
         final String uri = serviceKey(invoker.getUrl());
         Exporter<T> exporter = (Exporter<T>) exporterMap.get(uri);
         if (exporter != null) {
@@ -75,6 +77,11 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
                 return exporter;
             }
         }
+
+        /**
+         * 通过ProxyFactory创建代理类，将Invoker封装成业务接口的代理类
+         *  子类实现。 {@link org.apache.dubbo.rpc.protocol.http.HttpProtocol#doExport(Object, Class, URL)}
+         */
         final Runnable runnable = doExport(proxyFactory.getProxy(invoker, true), invoker.getInterface(), invoker.getUrl());
         exporter = new AbstractExporter<T>(invoker) {
             @Override

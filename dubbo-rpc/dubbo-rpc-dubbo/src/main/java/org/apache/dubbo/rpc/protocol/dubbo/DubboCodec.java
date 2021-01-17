@@ -169,22 +169,31 @@ public class DubboCodec extends ExchangeCodec {
         encodeResponseData(channel, out, data, DUBBO_VERSION);
     }
 
+    /**
+     * 按照 Dubbo 协议的格式编码 Request 请求体
+     */
     @Override
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data, String version) throws IOException {
-        RpcInvocation inv = (RpcInvocation) data;
 
+        // 请求体相关的内容，都封装在了RpcInvocation
+        RpcInvocation inv = (RpcInvocation) data;
+        // 写入版本号
         out.writeUTF(version);
         out.writeUTF(inv.getAttachment(PATH_KEY));
         out.writeUTF(inv.getAttachment(VERSION_KEY));
-
+        // 写入方法名称
         out.writeUTF(inv.getMethodName());
         out.writeUTF(ReflectUtils.getDesc(inv.getParameterTypes()));
+
+        // 依次写入全部参数
         Object[] args = inv.getArguments();
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 out.writeObject(encodeInvocationArgument(channel, inv, i));
             }
         }
+
+        // 依次写入全部的附加信息
         out.writeObject(inv.getAttachments());
     }
 

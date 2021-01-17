@@ -37,6 +37,8 @@ import java.util.function.Function;
  * @serial Don't change the class name and package name.
  * @see org.apache.dubbo.rpc.Invoker#invoke(Invocation)
  * @see AppResponse
+ *
+ *  抽象了一次调用的返回值，其中包含了被调用方返回值（或是异常）以及附加信息，我们也可以添加回调方法，在 RPC 调用方法结束时会触发这些回调
  */
 public interface Result extends CompletionStage<Result>, Future<Result>, Serializable {
 
@@ -44,6 +46,8 @@ public interface Result extends CompletionStage<Result>, Future<Result>, Seriali
      * Get invoke result.
      *
      * @return result. if no result return null.
+     *
+     * 获取/设置此次调用的返回值
      */
     Object getValue();
 
@@ -53,6 +57,8 @@ public interface Result extends CompletionStage<Result>, Future<Result>, Seriali
      * Get exception.
      *
      * @return exception. if no exception return null.
+     *
+     * 如果此次调用发生异常，则可以通过下面三个方法获取
      */
     Throwable getException();
 
@@ -78,6 +84,8 @@ public interface Result extends CompletionStage<Result>, Future<Result>, Seriali
      *
      * @return result.
      * @throws if has exception throw it.
+     *
+     * 如果没有异常，则返回结果
      */
     Object recreate() throws Throwable;
 

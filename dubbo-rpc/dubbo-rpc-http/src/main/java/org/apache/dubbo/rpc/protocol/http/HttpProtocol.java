@@ -82,8 +82,14 @@ public class HttpProtocol extends AbstractProxyProtocol {
     @Override
     protected <T> Runnable doExport(final T impl, Class<T> type, URL url) throws RpcException {
         String addr = getAddr(url);
+
+        // 先查询serverMap缓存
         HttpServer server = serverMap.get(addr);
+
+        // 查询缓存失败
         if (server == null) {
+
+            // 创建HttpServer,注意，传入的HttpHandler实现是InternalHandler
             server = httpBinder.bind(url, new InternalHandler());
             serverMap.put(addr, server);
         }
@@ -92,6 +98,7 @@ public class HttpProtocol extends AbstractProxyProtocol {
 
         final String genericPath = path + "/" + GENERIC_KEY;
 
+        // 返回Runnable回调，在Exporter中的 unexport() 方法中执行
         skeletonMap.put(genericPath, createExporter(impl, GenericService.class));
         return new Runnable() {
             @Override
@@ -180,6 +187,8 @@ public class HttpProtocol extends AbstractProxyProtocol {
             throw new IllegalStateException("Unsupported http protocol client " + client + ", only supported: simple, commons");
         }
         httpProxyFactoryBean.afterPropertiesSet();
+
+        // 返回的是serviceType类型的代理对象
         return (T) httpProxyFactoryBean.getObject();
     }
 
@@ -209,8 +218,10 @@ public class HttpProtocol extends AbstractProxyProtocol {
             String uri = request.getRequestURI();
             HttpInvokerServiceExporter skeleton = skeletonMap.get(uri);
             if (!request.getMethod().equalsIgnoreCase("POST")) {
+                // 其他Method类型的请求，例如，GET请求，直接返回500
                 response.setStatus(500);
             } else {
+                // 只处理POST请求
                 RpcContext.getContext().setRemoteAddress(request.getRemoteAddr(), request.getRemotePort());
                 try {
                     skeleton.handleRequest(request, response);

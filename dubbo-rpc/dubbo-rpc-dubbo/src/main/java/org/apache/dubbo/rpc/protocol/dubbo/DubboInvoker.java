@@ -78,7 +78,11 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
 
         // 设置附加属性
         RpcInvocation inv = (RpcInvocation) invocation;
+
+        // 此次调用的方法名称
         final String methodName = RpcUtils.getMethodName(invocation);
+
+        // 向Invocation中添加附加信息，这里将URL的path和version添加到附加信息中
         inv.setAttachment(PATH_KEY, getUrl().getPath());
         inv.setAttachment(VERSION_KEY, version);
 
@@ -91,27 +95,32 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         }
         try {
 
-            // 示范法为 oneway 就是不需要响应结果的请求。
+            // oneway 就是不需要响应结果的请求。
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
 
-            // 超时等待时间
+            // // 根据调用的方法名称和配置计算此次调用的超时时间
             int timeout = getUrl().getMethodParameter(methodName, TIMEOUT_KEY, DEFAULT_TIMEOUT);
             if (isOneway) {
+
+                // 不需要关注返回值的请求
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
 
                 /**
-                 * 异步发送 {@link ReferenceCountExchangeClient#send(Object, boolean)}
+                 * 异步发送, 不关注返回值 {@link ReferenceCountExchangeClient#send(Object, boolean)}
                  */
                 currentClient.send(inv, isSent);
                 RpcContext.getContext().setFuture(null);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             } else {
+                // 需要关注返回值的请求
 
                 // 异步 RpcResult
                 AsyncRpcResult asyncRpcResult = new AsyncRpcResult(inv);
 
                 /**
-                 * 异步调用 {@link ReferenceCountExchangeClient#request(Object, int)}
+                 * 异步调用 `关注返回值` {@link ReferenceCountExchangeClient#request(Object, int)}
+                 *
+                 *  【 core 】会相应地创建 DefaultFuture 对象以及检测超时的定时任务 {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeChannel#request(Object, int)}
                  */
                 CompletableFuture<Object> responseFuture = currentClient.request(inv, timeout);
                 responseFuture.whenComplete((obj, t) -> {

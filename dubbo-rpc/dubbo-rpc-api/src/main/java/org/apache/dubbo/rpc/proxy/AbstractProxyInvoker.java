@@ -83,8 +83,9 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         try {
 
             /**
-             * 具体执行本地服务调用
-             *  默认: {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory}
+             * 具体执行本地服务调用  {@link #doInvoke(Object, String, Class[], Object[])}  `由子类实现`
+             *
+             *  默认: {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
              *  jdk  {@link org.apache.dubbo.rpc.proxy.jdk.JdkProxyFactory}
              */
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
@@ -111,6 +112,8 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
                 } else {
                     result.setValue(obj);
                 }
+
+                // jdk 8 异步处理。
                 asyncRpcResult.complete(result);
             });
             return asyncRpcResult;

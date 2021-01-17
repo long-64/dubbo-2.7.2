@@ -45,12 +45,16 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // 该 Invoker 对象封装的业务接口类型
     private final Class<T> type;
 
+    // 与当前 Invoker 关联的 URL 对象，其中包含了全部的配置信息
     private final URL url;
 
+    // 当前 Invoker 关联的一些附加信息，这些附加信息可以来自关联的 URL。
     private final Map<String, String> attachment;
 
+    // 用来控制当前 Invoker 的状态
     private volatile boolean available = true;
 
     private AtomicBoolean destroyed = new AtomicBoolean(false);
@@ -125,6 +129,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         return getInterface() + " -> " + (getUrl() == null ? "" : getUrl().toString());
     }
 
+
     @Override
     public Result invoke(Invocation inv) throws RpcException {
         // if invoker is destroyed due to address refresh from registry, let's allow the current invoke to proceed
@@ -132,11 +137,17 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
             logger.warn("Invoker for service " + this + " on consumer " + NetUtils.getLocalHost() + " is destroyed, "
                     + ", dubbo version is " + Version.getVersion() + ", this invoker should not be used any longer");
         }
+
+        // 首先将传入的Invocation转换为RpcInvocation
         RpcInvocation invocation = (RpcInvocation) inv;
         invocation.setInvoker(this);
+
+        // attachment集合添加为Invocation的附加信息
         if (CollectionUtils.isNotEmptyMap(attachment)) {
             invocation.addAttachmentsIfAbsent(attachment);
         }
+
+        // 将RpcContext的附加信息添加为Invocation的附加信息
         Map<String, String> contextAttachments = RpcContext.getContext().getAttachments();
         if (CollectionUtils.isNotEmptyMap(contextAttachments)) {
             /**
@@ -148,7 +159,10 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
             invocation.addAttachments(contextAttachments);
         }
 
+        // 设置此次调用的模式，异步还是同步
         invocation.setInvokeMode(RpcUtils.getInvokeMode(url, invocation));
+
+        // 如果是异步调用，给这次调用添加一个唯一ID
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
         try {

@@ -191,9 +191,13 @@ public class RpcUtils {
         return $INVOKE_ASYNC.equals(inv.getMethodName());
     }
 
+    /**
+     * 客户端发送消息后，不需要得到响应。
+     */
     public static boolean isOneway(URL url, Invocation inv) {
         boolean isOneway;
         if (Boolean.FALSE.toString().equals(inv.getAttachment(RETURN_KEY))) {
+            // 首先关注的是Invocation中 "return" 这个附加属性
             isOneway = true;
         } else {
             isOneway = !url.getMethodParameter(getMethodName(inv), RETURN_KEY, true);

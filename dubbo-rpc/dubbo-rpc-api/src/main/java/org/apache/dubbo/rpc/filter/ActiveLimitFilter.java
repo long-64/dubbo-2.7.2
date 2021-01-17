@@ -138,11 +138,16 @@ public class ActiveLimitFilter extends ListenableFilter {
     static class ActiveLimitListener implements Listener {
         @Override
         public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+
+            // 获取调用的方法名称
             String methodName = invocation.getMethodName();
             URL url = invoker.getUrl();
             int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
 
+            // 调用 RpcStatus.endCount() 方法完成调用监控的统计
             RpcStatus.endCount(url, methodName, getElapsed(invocation), true);
+
+            // 调用 notifyFinish() 方法唤醒阻塞在对应 RpcStatus 对象上的线程
             notifyFinish(RpcStatus.getStatus(url, methodName), max);
         }
 

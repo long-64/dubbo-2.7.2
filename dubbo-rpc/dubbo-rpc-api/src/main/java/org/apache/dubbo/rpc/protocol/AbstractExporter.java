@@ -28,8 +28,10 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // 维护了一个 Invoker 对象
     private final Invoker<T> invoker;
 
+    // 设置 unexported 字段为 true，并调用 Invoker 对象的 destory() 方法进行销毁
     private volatile boolean unexported = false;
 
     public AbstractExporter(Invoker<T> invoker) {

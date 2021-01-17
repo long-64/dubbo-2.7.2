@@ -72,10 +72,14 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     @Override
     public Object decode(Channel channel, InputStream input) throws IOException {
+
+        // 反序列化
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 
         byte flag = in.readByte();
+
+        // 根据标志位判断当前结果中包含的信息，并调用不同的方法进行处理
         switch (flag) {
             case DubboCodec.RESPONSE_NULL_VALUE:
                 break;

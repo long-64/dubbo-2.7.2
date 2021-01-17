@@ -45,10 +45,13 @@ public class AppResponse extends AbstractResult implements Serializable {
 
     private static final long serialVersionUID = -6925924956850004727L;
 
+    // 响应结果，也就是服务端返回的结果值
     private Object result;
 
+    // 服务端返回的异常信息
     private Throwable exception;
 
+    // 服务端返回的附加信息
     private Map<String, String> attachments = new HashMap<String, String>();
 
     public AppResponse() {

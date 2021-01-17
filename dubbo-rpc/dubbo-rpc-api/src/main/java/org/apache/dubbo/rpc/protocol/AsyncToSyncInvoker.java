@@ -31,6 +31,8 @@ import java.util.concurrent.ExecutionException;
 /**
  * This class will work as a wrapper wrapping outside of each protocol invoker.
  * @param <T>
+ *
+ *  负责将异步调用转换成同步调用
  */
 public class AsyncToSyncInvoker<T> implements Invoker<T> {
 
@@ -51,6 +53,8 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
 
         try {
             if (InvokeMode.SYNC == ((RpcInvocation)invocation).getInvokeMode()) {
+
+                // 调用get()方法，阻塞等待响应返回
                 asyncResult.get();
             }
         } catch (InterruptedException e) {

@@ -60,6 +60,10 @@ final class LazyConnectExchangeClient implements ExchangeClient {
     private volatile ExchangeClient client;
     private AtomicLong warningcount = new AtomicLong(0);
 
+    /**
+     *
+     *  不会创建底层持有连接的 Client，而是在需要发送请求的时候，才会调用 initClient() 方法进行 Client 的创建
+     */
     public LazyConnectExchangeClient(URL url, ExchangeHandler requestHandler) {
         // lazy connect, need set send.reconnect = true, to avoid channel bad status.
         this.url = url.addParameter(SEND_RECONNECT_KEY, Boolean.TRUE.toString());
@@ -69,6 +73,8 @@ final class LazyConnectExchangeClient implements ExchangeClient {
     }
 
     private void initClient() throws RemotingException {
+
+        // 底层Client已经初始化过了，这里不再初始化
         if (client != null) {
             return;
         }
@@ -80,6 +86,10 @@ final class LazyConnectExchangeClient implements ExchangeClient {
             if (client != null) {
                 return;
             }
+
+            /**
+             * 通过Exchangers门面类，创建 ExchangeClient对象 {@link Exchangers#connect(URL, ExchangeHandler)}
+             */
             this.client = Exchangers.connect(url, requestHandler);
         } finally {
             connectLock.unlock();

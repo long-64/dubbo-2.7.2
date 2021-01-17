@@ -24,6 +24,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +50,14 @@ public abstract class Proxy {
     };
     private static final AtomicLong PROXY_CLASS_COUNTER = new AtomicLong(0);
     private static final String PACKAGE_NAME = Proxy.class.getPackage().getName();
+
+    /**
+     * 这个代理类缓存（new WeakHashMap<ClassLoader, Map<String, Object>>() 类型），
+     *      其中第一层 Key 是 ClassLoader 对象，
+     *      第二层 Key 是上面整理得到的接口拼接而成的，Value 是被缓存的代理类的 WeakReference（弱引用）
+     *
+     *  WeakReference 引用的对象生命周期是两次 GC 之间，也就是说当垃圾收集器扫描到只具有弱引用的对象时，无论当前内存空间是否足够，都会回收该对象。
+     */
     private static final Map<ClassLoader, Map<String, Object>> PROXY_CACHE_MAP = new WeakHashMap<ClassLoader, Map<String, Object>>();
 
     private static final Object PENDING_GENERATION_MARKER = new Object();
@@ -74,6 +83,21 @@ public abstract class Proxy {
      * @param cl  class loader.
      * @param ics interface class array.
      * @return Proxy instance.
+     *
+     *   生成的代理类
+     *
+     *  package com.apache.dubbo.common.bytecode;
+     *  public class Proxy0 implements Proxy {
+     *
+     *     public void Proxy0() {}
+     *
+     *     public Object newInstance(InvocationHandler h){
+     *
+     * 		return new proxy0(h);
+     *
+     *        }
+     *
+     *  }
      */
     public static Proxy getProxy(ClassLoader cl, Class<?>... ics) {
         if (ics.length > MAX_PROXY_COUNT) {
@@ -247,6 +271,11 @@ public abstract class Proxy {
             ccm.addDefaultConstructor();
             ccm.setSuperClass(Proxy.class);
             ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }");
+
+
+            /**
+             * {@link ClassGenerator#toClass}
+             */
             Class<?> pc = ccm.toClass();
 
             // 通过反射创建 Proxy 实例

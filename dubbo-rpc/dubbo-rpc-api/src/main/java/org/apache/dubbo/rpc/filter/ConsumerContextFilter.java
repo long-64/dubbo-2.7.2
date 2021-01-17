@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
  *
  * @see org.apache.dubbo.rpc.Filter
  * @see RpcContext
+ *
+ *  Consumer 端 Filter 实现，它会在当前的 RpcContext 中记录本地调用的一些状态信息（会记录到 LOCAL 对应的 RpcContext 中）
  */
 @Activate(group = CONSUMER, order = -10000)
 public class ConsumerContextFilter extends ListenableFilter {
@@ -45,9 +47,13 @@ public class ConsumerContextFilter extends ListenableFilter {
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         RpcContext.getContext()
+
+                // 记录Invoker
                 .setInvoker(invoker)
                 .setInvocation(invocation)
+                // 记录本地地址以及远端地址
                 .setLocalAddress(NetUtils.getLocalHost(), 0)
+                // 记录远端应用名称等信息
                 .setRemoteAddress(invoker.getUrl().getHost(),
                         invoker.getUrl().getPort());
         if (invocation instanceof RpcInvocation) {

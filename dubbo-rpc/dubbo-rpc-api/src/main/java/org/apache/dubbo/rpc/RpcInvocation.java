@@ -42,18 +42,24 @@ public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
 
+    // 调用的目标方法名称。
     private String methodName;
 
+    // 记录了目标方法的全部参数类型
     private Class<?>[] parameterTypes;
 
+    // 具体参数值
     private Object[] arguments;
 
     private Map<String, String> attachments;
 
+    // 此次调用关联的 Invoker 对象
     private transient Invoker<?> invoker;
 
+    // 返回值的类型
     private transient Class<?> returnType;
 
+    // 此次调用的模式，分为 SYNC、ASYNC 和 FUTURE 三类
     private transient InvokeMode invokeMode;
 
     public RpcInvocation() {

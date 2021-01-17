@@ -37,14 +37,18 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 
 /**
  * abstract ProtocolSupport.
+ *
+ *  AbstractProtocol提供了一些 Protocol 实现需要的公共能力以及公共字段。
  */
 public abstract class AbstractProtocol implements Protocol {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // 用于存储出去的服务集合，其中的 Key 通过 ProtocolUtils.serviceKey() 方法创建的服务标识，
     protected final Map<String, Exporter<?>> exporterMap = new ConcurrentHashMap<String, Exporter<?>>();
 
     //TODO SoftReference
+    // 服务引用的集合
     protected final Set<Invoker<?>> invokers = new ConcurrentHashSet<Invoker<?>>();
 
     protected static String serviceKey(URL url) {
@@ -52,10 +56,18 @@ public abstract class AbstractProtocol implements Protocol {
         return serviceKey(port, url.getPath(), url.getParameter(VERSION_KEY), url.getParameter(GROUP_KEY));
     }
 
+    /**
+     *  serviceKey = serviceGroup / serviceName : serviceVersion : port
+     *
+     *  例如:     ${group}/com.demo.DemoService:1.0:20880
+     */
     protected static String serviceKey(int port, String serviceName, String serviceVersion, String serviceGroup) {
         return ProtocolUtils.serviceKey(port, serviceName, serviceVersion, serviceGroup);
     }
 
+    /**
+     * 释放协议
+     */
     @Override
     public void destroy() {
         for (Invoker<?> invoker : invokers) {
@@ -65,6 +77,8 @@ public abstract class AbstractProtocol implements Protocol {
                     if (logger.isInfoEnabled()) {
                         logger.info("Destroy reference: " + invoker.getUrl());
                     }
+
+                    // 关闭全部的服务引用
                     invoker.destroy();
                 } catch (Throwable t) {
                     logger.warn(t.getMessage(), t);
@@ -78,6 +92,8 @@ public abstract class AbstractProtocol implements Protocol {
                     if (logger.isInfoEnabled()) {
                         logger.info("Unexport service: " + exporter.getInvoker().getUrl());
                     }
+
+                    // 关闭暴露出去的服务
                     exporter.unexport();
                 } catch (Throwable t) {
                     logger.warn(t.getMessage(), t);
@@ -86,6 +102,9 @@ public abstract class AbstractProtocol implements Protocol {
         }
     }
 
+    /**
+     * 引用远程服务：
+     */
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
 

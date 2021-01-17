@@ -52,6 +52,8 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+
+        // 处理请求事件
         if (state == ChannelState.RECEIVED) {
             try {
 

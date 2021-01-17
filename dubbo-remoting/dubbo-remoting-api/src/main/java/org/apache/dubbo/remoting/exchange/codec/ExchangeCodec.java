@@ -322,6 +322,10 @@ public class ExchangeCodec extends TelnetCodec {
         if (req.isEvent()) {
             encodeEventData(channel, out, req.getData());
         } else {
+
+            /**
+             * 按照 Dubbo 协议的格式编码 Request 请求体  {@link org.apache.dubbo.rpc.protocol.dubbo.DubboCodec#encodeRequestData(Channel, ObjectOutput, Object)}
+             */
             encodeRequestData(channel, out, req.getData(), req.getVersion());
         }
 

@@ -24,6 +24,8 @@ import java.util.Map;
  * @serial Don't change the class name and package name.
  * @see org.apache.dubbo.rpc.Invoker#invoke(Invocation)
  * @see org.apache.dubbo.rpc.RpcInvocation
+ *
+ *  抽象一次 RPC 调用的目标服务和方法信息、相关参数信息、具体的参数值以及一些附加信息。
  */
 public interface Invocation {
 
@@ -32,6 +34,8 @@ public interface Invocation {
      *
      * @return method name.
      * @serial
+     *
+     *  调用的方法名称
      */
     String getMethodName();
 
@@ -40,6 +44,8 @@ public interface Invocation {
      *
      * @return parameter types.
      * @serial
+     *
+     *  参数类型集合
      */
     Class<?>[] getParameterTypes();
 

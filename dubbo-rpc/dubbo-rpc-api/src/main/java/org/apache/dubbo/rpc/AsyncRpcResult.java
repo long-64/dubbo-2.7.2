@@ -37,6 +37,8 @@ import java.util.function.Function;
  * AsyncRpcResult does not contain any concrete value (except the underlying value bring by CompletableFuture), consider it as a status transfer node.
  * {@link #getValue()} and {@link #getException()} are all inherited from {@link Result} interface, implementing them are mainly
  * for compatibility consideration. Because many legacy {@link Filter} implementation are most possibly to call getValue directly.
+ *
+ *  它表示的是一个异步的、未完成的 RPC 调用，其中会记录对应 RPC 调用的信息
  */
 public class AsyncRpcResult extends AbstractResult {
     private static final Logger logger = LoggerFactory.getLogger(AsyncRpcResult.class);
@@ -45,9 +47,11 @@ public class AsyncRpcResult extends AbstractResult {
      * RpcContext may already have been changed when callback happens, it happens when the same thread is used to execute another RPC call.
      * So we should keep the reference of current RpcContext instance and restore it before callback being executed.
      */
+    // 用于存储相关的 RpcContext 对象
     private RpcContext storedContext;
     private RpcContext storedServerContext;
 
+    // 此次 RPC 调用关联的 Invocation 对象。
     private Invocation invocation;
 
     public AsyncRpcResult(Invocation invocation) {
@@ -100,7 +104,10 @@ public class AsyncRpcResult extends AbstractResult {
 
     public Result getAppResponse() {
         try {
+            // 检测responseFuture是否已完成
             if (this.isDone()) {
+
+                // 获取AppResponse
                 return this.get();
             }
         } catch (Exception e) {

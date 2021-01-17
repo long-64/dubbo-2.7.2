@@ -51,6 +51,9 @@ import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
  *
  * @export
  * @see org.apache.dubbo.rpc.filter.ContextFilter
+ *
+ *  是线程级别的上下文信息，每个线程绑定一个 RpcContext 对象，底层依赖 ThreadLocal 实现。
+ *  RpcContext 主要用于存储一个线程中一次请求的临时状态，当线程处理新的请求（Provider 端）或是线程发起新的请求（Consumer 端）时，RpcContext 中存储的内容就会更新。
  */
 public class RpcContext {
 
@@ -58,6 +61,7 @@ public class RpcContext {
      * use internal thread local to improve performance
      */
     // FIXME REQUEST_CONTEXT
+    // 在发起请求时，会使用该RpcContext来存储上下文信息
     private static final InternalThreadLocal<RpcContext> LOCAL = new InternalThreadLocal<RpcContext>() {
         @Override
         protected RpcContext initialValue() {
@@ -66,6 +70,7 @@ public class RpcContext {
     };
 
     // FIXME RESPONSE_CONTEXT
+    // 在接收到响应的时候，会使用该RpcContext来存储上下文信息
     private static final InternalThreadLocal<RpcContext> SERVER_LOCAL = new InternalThreadLocal<RpcContext>() {
         @Override
         protected RpcContext initialValue() {
@@ -73,7 +78,10 @@ public class RpcContext {
         }
     };
 
+    // 可用于记录调用上下文的附加信息，这些信息会被添加到 Invocation 中，并传递到远端节点。
     private final Map<String, String> attachments = new HashMap<String, String>();
+
+    // 用来记录上下文的键值对信息，但是不会被传递到远端节点。
     private final Map<String, Object> values = new HashMap<String, Object>();
 
     private List<URL> urls;

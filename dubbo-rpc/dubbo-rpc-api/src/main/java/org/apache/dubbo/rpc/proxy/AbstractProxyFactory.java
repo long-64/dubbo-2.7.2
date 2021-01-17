@@ -47,7 +47,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         String config = invoker.getUrl().getParameter(INTERFACES);
         if (config != null && config.length() > 0) {
 
-            // 切分接口列表
+            // 按照逗号切分interfaces参数，得到接口集合
             String[] types = COMMA_SPLIT_PATTERN.split(config);
             if (types != null && types.length > 0) {
                 interfaces = new Class<?>[types.length + 2];

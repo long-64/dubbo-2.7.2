@@ -53,6 +53,9 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
             decode(((Response) message).getResult());
         }
 
+        /**
+         * {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler}  `received`
+         */
         handler.received(channel, message);
     }
 

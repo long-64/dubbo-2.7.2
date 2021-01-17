@@ -54,7 +54,8 @@ public class ExchangeServerDelegate implements ExchangeServer {
     }
 
     @Override
-    public void reset(URL url) {
+    public void
+    reset(URL url) {
         server.reset(url);
     }
 

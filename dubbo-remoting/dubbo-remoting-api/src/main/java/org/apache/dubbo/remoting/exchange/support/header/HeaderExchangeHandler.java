@@ -147,7 +147,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         try {
 
             /**
-             * 最终实现 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler}
+             * 最终实现 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler} `connected()`
              */
             handler.connected(exchangeChannel);
         } finally {
@@ -218,7 +218,11 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                     handlerEvent(channel, request);
                 } else {
 
-                    // 需要返回值 req-res, twoway
+                    /**
+                     * 需要返回值 req-res, twoway,
+                     *
+                     *  入口，{@link org.apache.dubbo.rpc.protocol.dubbo.DubboInvoker#doInvoke} `isOneway` 判断是否有返回值。
+                     */
                     if (request.isTwoWay()) {
 
                         /**

@@ -36,13 +36,29 @@ public class RpcStatus {
 
     private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS = new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
     private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
+
+    // 当前并发度。这也是 ActiveLimitFilter 中关注的并发度
     private final AtomicInteger active = new AtomicInteger();
+
+    // 调用的总数
     private final AtomicLong total = new AtomicLong();
+
+    // 失败的调用数。
     private final AtomicInteger failed = new AtomicInteger();
+
+    // 所有调用的总耗时
     private final AtomicLong totalElapsed = new AtomicLong();
+
+    // 所有失败调用的总耗时
     private final AtomicLong failedElapsed = new AtomicLong();
+
+    // 所有调用中最长的耗时。
     private final AtomicLong maxElapsed = new AtomicLong();
+
+    // 所有失败调用中最长的耗时
     private final AtomicLong failedMaxElapsed = new AtomicLong();
+
+    // 所有成功调用中最长的耗时
     private final AtomicLong succeededMaxElapsed = new AtomicLong();
 
     private RpcStatus() {
@@ -169,16 +185,26 @@ public class RpcStatus {
 
         // 原子性递减激活并发数。
         status.active.decrementAndGet();
+
+        // 调用总次数增加
         status.total.incrementAndGet();
+
+        // 调用总耗时增加
         status.totalElapsed.addAndGet(elapsed);
+
+        // 更新最大耗时
         if (status.maxElapsed.get() < elapsed) {
             status.maxElapsed.set(elapsed);
         }
+
+        // 如果此次调用成功，则会更新成功调用的最大耗时
         if (succeeded) {
             if (status.succeededMaxElapsed.get() < elapsed) {
                 status.succeededMaxElapsed.set(elapsed);
             }
         } else {
+
+            // 如果此次调用失败，则会更新失败调用的最大耗时
             status.failed.incrementAndGet();
             status.failedElapsed.addAndGet(elapsed);
             if (status.failedMaxElapsed.get() < elapsed) {

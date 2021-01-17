@@ -40,6 +40,8 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_CONNECT_INITIAL
 final class ReferenceCountExchangeClient implements ExchangeClient {
 
     private final URL url;
+
+    // 用于记录该 Client 被应用的次数
     private final AtomicInteger referenceCount = new AtomicInteger(0);
 
     private ExchangeClient client;
@@ -149,14 +151,21 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public void close(int timeout) {
+
+        // 引用次数减到0，关闭底层的 ExchangeClient，具体操作有：停掉心跳任务、重连任务以及关闭底层Channel
         if (referenceCount.decrementAndGet() <= 0) {
             if (timeout == 0) {
                 client.close();
 
             } else {
+
+                /**
+                 *  关闭底层 ExchangeClient {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeClient#close(int)}
+                 */
                 client.close(timeout);
             }
 
+            // 创建LazyConnectExchangeClient，并将 client字段指向该对象
             replaceWithLazyClient();
         }
     }
@@ -174,6 +183,9 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
      */
     private void replaceWithLazyClient() {
         // this is a defensive operation to avoid client is closed by accident, the initial state of the client is false
+
+
+        // 在原有的URL之上，添加一些LazyConnectExchangeClient特有的参数
         URL lazyUrl = URLBuilder.from(url)
                 .addParameter(LAZY_CONNECT_INITIAL_STATE_KEY, Boolean.FALSE)
                 .addParameter(RECONNECT_KEY, Boolean.FALSE)
@@ -185,8 +197,15 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
         /**
          * the order of judgment in the if statement cannot be changed.
+         *  如果当前client字段已经指向了LazyConnectExchangeClient，则不需要再次创建 LazyConnectExchangeClient兜底了
          */
         if (!(client instanceof LazyConnectExchangeClient) || client.isClosed()) {
+
+            /*
+             * ChannelHandler依旧使用原始ExchangeClient使用的Handler，即DubboProtocol中的requestHandler字段
+             *
+             *  `LazyConnectExchangeClient` 不会创建底层持有连接的 Client，而是在需要发送请求的时候，才会调用 initClient() 方法进行 Client 的创建
+             */
             client = new LazyConnectExchangeClient(lazyUrl, client.getExchangeHandler());
         }
     }
