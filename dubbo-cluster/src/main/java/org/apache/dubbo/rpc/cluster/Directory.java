@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
  *
- *  目录
+ *  目录, 核心在 {@link org.apache.dubbo.rpc.cluster.directory.AbstractDirectory
  */
 public interface Directory<T> extends Node {
 
@@ -38,6 +38,8 @@ public interface Directory<T> extends Node {
      * get service type.
      *
      * @return service type.
+     *
+     *  服务接口类型
      */
     Class<T> getInterface();
 
@@ -45,6 +47,8 @@ public interface Directory<T> extends Node {
      * list invokers.
      *
      * @return invokers
+     *
+     *  list()方法会根据传入的Invocation请求，过滤自身维护的Invoker集合，返回符合条件的Invoker集合
      */
     List<Invoker<T>> list(Invocation invocation) throws RpcException;
 

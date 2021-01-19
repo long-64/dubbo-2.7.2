@@ -50,6 +50,7 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
 
     private volatile URL consumerUrl;
 
+    // 用于记录当前使用的 Router 对象集合, 路由规则使用。
     protected RouterChain<T> routerChain;
 
     public AbstractDirectory(URL url) {
@@ -83,7 +84,9 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         }
 
         /**
-         *  【 路由过滤 】 {@link org.apache.dubbo.registry.integration.RegistryDirectory#doList(Invocation)}
+         *  【 路由过滤 】 子类实现
+         *  动态实现, 随注册中心变化  {@link org.apache.dubbo.registry.integration.RegistryDirectory#doList(Invocation)}
+         *  静态 {@link StaticDirectory#doList(Invocation)}
          */
         return doList(invocation);
     }

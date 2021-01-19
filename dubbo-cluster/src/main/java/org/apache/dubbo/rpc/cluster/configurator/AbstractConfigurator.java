@@ -63,16 +63,24 @@ public abstract class AbstractConfigurator implements Configurator {
     @Override
     public URL configure(URL url) {
         // If override url is not enabled or is invalid, just return.
+
+        // 这里会根据配置URL的enabled参数以及host决定该URL是否可用，
         if (!configuratorUrl.getParameter(ENABLED_KEY, true) || configuratorUrl.getHost() == null || url == null || url.getHost() == null) {
             return url;
         }
         /**
          * This if branch is created since 2.7.0.
          */
+
+        // 针对2.7.0之后版本，这里添加了一个configVersion参数作为区分
         String apiVersion = configuratorUrl.getParameter(CONFIG_VERSION_KEY);
+
+        // 对2.7.0之后版本的配置处理
         if (StringUtils.isNotEmpty(apiVersion)) {
             String currentSide = url.getParameter(SIDE_KEY);
             String configuratorSide = configuratorUrl.getParameter(SIDE_KEY);
+
+            // 根据配置URL中的side参数以及原始URL中的side参数值进行匹配
             if (currentSide.equals(configuratorSide) && CONSUMER.equals(configuratorSide) && 0 == configuratorUrl.getPort()) {
                 url = configureIfMatch(NetUtils.getLocalHost(), url);
             } else if (currentSide.equals(configuratorSide) && PROVIDER.equals(configuratorSide) && url.getPort() == configuratorUrl.getPort()) {
@@ -83,6 +91,8 @@ public abstract class AbstractConfigurator implements Configurator {
          * This else branch is deprecated and is left only to keep compatibility with versions before 2.7.0
          */
         else {
+
+            // 2.7.0版本之前对配置的处理
             url = configureDeprecated(url);
         }
         return url;
@@ -91,6 +101,8 @@ public abstract class AbstractConfigurator implements Configurator {
     @Deprecated
     private URL configureDeprecated(URL url) {
         // If override url has port, means it is a provider address. We want to control a specific provider with this override url, it may take effect on the specific provider instance or on consumers holding this provider instance.
+
+        // 如果配置URL中的端口不为空，则是针对Provider的，需要判断原始URL的端口，两者端口相同，才能执行configureIfMatch()方法中的配置方法
         if (configuratorUrl.getPort() != 0) {
             if (url.getPort() == configuratorUrl.getPort()) {
                 return configureIfMatch(url.getHost(), url);
@@ -98,9 +110,13 @@ public abstract class AbstractConfigurator implements Configurator {
         } else {// override url don't have a port, means the ip override url specify is a consumer address or 0.0.0.0
             // 1.If it is a consumer ip address, the intention is to control a specific consumer instance, it must takes effect at the consumer side, any provider received this override url should ignore;
             // 2.If the ip is 0.0.0.0, this override url can be used on consumer, and also can be used on provider
+
+            // 如果原始URL属于Consumer，则使用Consumer的host进行匹配
             if (url.getParameter(SIDE_KEY, PROVIDER).equals(CONSUMER)) {
                 return configureIfMatch(NetUtils.getLocalHost(), url);// NetUtils.getLocalHost is the ip address consumer registered to registry.
             } else if (url.getParameter(SIDE_KEY, CONSUMER).equals(PROVIDER)) {
+
+                // 如果是Provider URL，则用0.0.0.0来配置
                 return configureIfMatch(ANYHOST_VALUE, url);// take effect on all providers, so address must be 0.0.0.0, otherwise it won't flow to this if branch
             }
         }
@@ -116,8 +132,10 @@ public abstract class AbstractConfigurator implements Configurator {
                         configuratorUrl.getUsername());
                 String currentApplication = url.getParameter(APPLICATION_KEY, url.getUsername());
                 if (configApplication == null || ANY_VALUE.equals(configApplication)
-                        || configApplication.equals(currentApplication)) {
+                        || configApplication.equals(currentApplication)) { // 匹配application
                     Set<String> conditionKeys = new HashSet<String>();
+
+                    // 排除不能动态修改的属性，其中包括category、check、dynamic、enabled还有以~开头的属性
                     conditionKeys.add(CATEGORY_KEY);
                     conditionKeys.add(Constants.CHECK_KEY);
                     conditionKeys.add(DYNAMIC_KEY);
@@ -133,6 +151,8 @@ public abstract class AbstractConfigurator implements Configurator {
                         String value = entry.getValue();
                         if (key.startsWith("~") || APPLICATION_KEY.equals(key) || SIDE_KEY.equals(key)) {
                             conditionKeys.add(key);
+
+                            // 如果配置URL与原URL中以~开头的参数值不相同，则不使用该配置URL重写原URL
                             if (value != null && !ANY_VALUE.equals(value)
                                     && !value.equals(url.getParameter(key.startsWith("~") ? key.substring(1) : key))) {
                                 return url;

@@ -85,6 +85,11 @@ import static org.apache.dubbo.common.constants.RegistryConstants.ROUTE_PROTOCOL
 
 /**
  * RegistryDirectory
+ *
+ *  实现中维护的 Invoker 集合会随着注册中心中维护的注册信息动态发生变化，这就依赖了 ZooKeeper 等注册中心的推送能力
+ *
+ *   1、实现 NotifyListener 接口。
+ *      当注册中心的服务配置发生变化时，RegistryDirectory 会收到变更通知，然后RegistryDirectory 会根据注册中心推送的通知，动态增删底层 Invoker 集合。
  */
 public class RegistryDirectory<T> extends AbstractDirectory<T> implements NotifyListener {
 
@@ -96,11 +101,21 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             .getAdaptiveExtension();
 
     private final String serviceKey; // Initialization at construction time, assertion not null
+
+    // 服务接口类型，例如，org.apache.dubbo.demo.DemoService
     private final Class<T> serviceType; // Initialization at construction time, assertion not null
+
+    // Consumer URL 中 refer 参数解析后得到的全部 KV。
     private final Map<String, String> queryMap; // Initialization at construction time, assertion not null
     private final URL directoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
+
+    // 是否引用多个服务组
     private final boolean multiGroup;
+
+    // 使用的 Protocol 实现
     private Protocol protocol; // Initialization at the time of injection, the assertion is not null
+
+    // 使用的注册中心实现
     private Registry registry; // Initialization at the time of injection, the assertion is not null
     private volatile boolean forbidden = false;
 
@@ -128,6 +143,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
 
     public RegistryDirectory(Class<T> serviceType, URL url) {
+
+        // 传入的url参数是注册中心的URL，例如，zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?...，其中refer参数包含了Consumer信息，例如，refer=application=dubbo-demo-api-consumer&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&pid=13423&register.ip=192.168.124.3&side=consumer(URLDecode之后的值)
         super(url);
         if (serviceType == null) {
             throw new IllegalArgumentException("service type is null.");
@@ -137,6 +154,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         }
         this.serviceType = serviceType;
         this.serviceKey = url.getServiceKey();
+
+        // 解析refer参数值，得到其中Consumer的属性信息
         this.queryMap = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
         this.overrideDirectoryUrl = this.directoryUrl = turnRegistryUrlToConsumerUrl(url);
         String group = directoryUrl.getParameter(GROUP_KEY, "");
@@ -175,7 +194,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         serviceConfigurationListener = new ReferenceConfigurationListener(this, url);
 
         /**
-         * {@link org.apache.dubbo.registry.support.FailbackRegistry#subscribe(URL, NotifyListener)}
+         *  完成订阅操作 {@link org.apache.dubbo.registry.support.FailbackRegistry#subscribe(URL, NotifyListener)}
          */
         registry.subscribe(url, this);
     }
@@ -214,6 +233,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     }
 
     /**
+     *  重写 notify 方法。
      *
      *  ZK 获取服务提供者的地址列表，调用 notify()
      *
@@ -228,27 +248,32 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 .filter(this::isValidCategory)
                 .filter(this::isNotCompatibleFor26x)
                 .collect(Collectors.groupingBy(url -> {
+                    // configurators
                     if (UrlUtils.isConfigurator(url)) {
                         return CONFIGURATORS_CATEGORY;
+
+                        // router
                     } else if (UrlUtils.isRoute(url)) {
                         return ROUTERS_CATEGORY;
+
+                        // provider
                     } else if (UrlUtils.isProvider(url)) {
                         return PROVIDERS_CATEGORY;
                     }
                     return "";
                 }));
 
-        // 配置信息、例如: 服务降级信息
+        // 配置信息、例如: 服务降级信息 (获取configurators类型的URL，并转换成Configurator对象)
         List<URL> configuratorURLs = categoryUrls.getOrDefault(CONFIGURATORS_CATEGORY, Collections.emptyList());
         this.configurators = Configurator.toConfigurators(configuratorURLs).orElse(this.configurators);
 
-        // 路由信息收集并保持
+        // 获取routers类型的URL，并转成Router对象，添加到RouterChain中
         List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
         toRouters(routerURLs).ifPresent(this::addRouters);
 
         // providers
 
-        // 服务提供者信息
+        // 服务提供者信息 ( 获取providers类型的URL}
         List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
 
         /**
@@ -298,6 +323,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             // 禁止访问
             this.forbidden = true; // Forbid to access
             this.invokers = Collections.emptyList();
+
+            // 清空RouterChain中的Invoker集合
             routerChain.setInvokers(this.invokers);
 
             /**
@@ -347,6 +374,10 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             // pre-route and build cache, notice that route cache should build on original Invoker list.
             // toMergeMethodInvokerMap() will wrap some invokers having different groups, those wrapped invokers not should be routed.
             routerChain.setInvokers(newInvokers);
+
+            /**
+             * 合并 Invoker。{@link #toMergeInvokerList(List)}
+             */
             this.invokers = multiGroup ? toMergeInvokerList(newInvokers) : newInvokers;
             this.urlInvokerMap = newUrlInvokerMap;
 
@@ -362,20 +393,32 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         }
     }
 
+    // 合并 Invoker。
     private List<Invoker<T>> toMergeInvokerList(List<Invoker<T>> invokers) {
         List<Invoker<T>> mergedInvokers = new ArrayList<>();
         Map<String, List<Invoker<T>>> groupMap = new HashMap<>();
+
+        // 按照group将Invoker分组
         for (Invoker<T> invoker : invokers) {
             String group = invoker.getUrl().getParameter(GROUP_KEY, "");
             groupMap.computeIfAbsent(group, k -> new ArrayList<>());
             groupMap.get(group).add(invoker);
         }
 
+        // 如果只有一个group，则直接使用该group分组对应的Invoker集合作为mergedInvoker
         if (groupMap.size() == 1) {
             mergedInvokers.addAll(groupMap.values().iterator().next());
+
+            // 将每个group对应的Invoker集合合并成一个Invoker
         } else if (groupMap.size() > 1) {
             for (List<Invoker<T>> groupList : groupMap.values()) {
+
+                // 这里使用到StaticDirectory以及Cluster合并每个group中的Invoker
                 StaticDirectory<T> staticDirectory = new StaticDirectory<>(groupList);
+
+                /**
+                 *  如果没有传入 RouterChain 对象，则会根据 URL 构造一个包含内置 Router 的 RouterChain 对象： {@link StaticDirectory#buildRouterChain()}
+                 */
                 staticDirectory.buildRouterChain();
                 mergedInvokers.add(CLUSTER.join(staticDirectory));
             }
@@ -431,12 +474,16 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             return newUrlInvokerMap;
         }
         Set<String> keys = new HashSet<>();
+
+        // 获取Consumer端支持的协议，即protocol参数指定的协议
         String queryProtocols = this.queryMap.get(PROTOCOL_KEY);
         for (URL providerUrl : urls) {
             // If protocol is configured at the reference side, only the matching protocol is selected
             if (queryProtocols != null && queryProtocols.length() > 0) {
                 boolean accept = false;
                 String[] acceptProtocols = queryProtocols.split(",");
+
+                // 遍历所有Consumer端支持的协议
                 for (String acceptProtocol : acceptProtocols) {
                     if (providerUrl.getProtocol().equals(acceptProtocol)) {
                         accept = true;
@@ -444,10 +491,12 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                     }
                 }
                 if (!accept) {
+                    // 如果当前URL不支持Consumer端的协议，也就无法执行后续转换成Invoker的逻辑
                     continue;
                 }
             }
             if (EMPTY_PROTOCOL.equals(providerUrl.getProtocol())) {
+                // 跳过empty协议的URL
                 continue;
             }
             if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
@@ -622,6 +671,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
     @Override
     public List<Invoker<T>> doList(Invocation invocation) {
+
+        // 检测forbidden字段，当该字段在refreshInvoker()过程中设置为true时，表示无Provider可用，直接抛出异常
         if (forbidden) {
             // 1. No service provider 2. Service providers are disabled
             throw new RpcException(RpcException.FORBIDDEN_EXCEPTION, "No provider available from registry " +
@@ -631,6 +682,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         }
 
         if (multiGroup) {
+
+            // multiGroup为true时的特殊处理，在refreshInvoker()方法中针对multiGroup为true的场景，已经使用Router进行了筛选，所以这里直接返回接口
             return this.invokers == null ? Collections.emptyList() : this.invokers;
         }
 
@@ -639,7 +692,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             // Get invokers from cache, only runtime routers will be executed.
 
             /**
-             *  【 进入路由 】 {@link RouterChain#route(URL, Invocation)}
+             *  【 进入路由, 筛选Invoker集合，最终得到符合路由条件的Invoker集合 】 {@link RouterChain#route(URL, Invocation)}
              */
             invokers = routerChain.route(getConsumerUrl(), invocation);
         } catch (Throwable t) {

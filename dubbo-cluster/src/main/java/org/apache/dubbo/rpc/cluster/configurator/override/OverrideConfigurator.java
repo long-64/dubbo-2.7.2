@@ -22,6 +22,7 @@ import org.apache.dubbo.rpc.cluster.configurator.AbstractConfigurator;
 /**
  * OverrideConfigurator
  *
+ *  覆盖方式。
  */
 public class OverrideConfigurator extends AbstractConfigurator {
 

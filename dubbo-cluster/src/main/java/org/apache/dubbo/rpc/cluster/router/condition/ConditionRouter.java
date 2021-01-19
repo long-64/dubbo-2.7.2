@@ -52,6 +52,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.HOST_KEY;
 /**
  * ConditionRouter
  *
+ *  是基于条件表达式的路由实现类
  */
 public class ConditionRouter extends AbstractRouter {
     public static final String NAME = "condition";
@@ -82,7 +83,11 @@ public class ConditionRouter extends AbstractRouter {
             if (rule == null || rule.trim().length() == 0) {
                 throw new IllegalArgumentException("Illegal route rule!");
             }
+
+            // 将路由规则中的"consumer."和"provider."字符串清理掉
             rule = rule.replace("consumer.", "").replace("provider.", "");
+
+            // 按照"=>"字符串进行分割，得到whenRule和thenRule两部分
             int i = rule.indexOf("=>");
             String whenRule = i < 0 ? null : rule.substring(0, i).trim();
             String thenRule = i < 0 ? rule.trim() : rule.substring(i + 2).trim();
@@ -177,16 +182,24 @@ public class ConditionRouter extends AbstractRouter {
             return invokers;
         }
         try {
+
+            // 匹配发起请求的Consumer是否符合表达式中=>之前的过滤条件
             if (!matchWhen(url, invocation)) {
                 return invokers;
             }
             List<Invoker<T>> result = new ArrayList<Invoker<T>>();
+
+            // 判断=>之后是否存在Provider过滤条件，若不存在则直接返回空集合，表示无Provider可用
             if (thenCondition == null) {
                 logger.warn("The current consumer in the service blacklist. consumer: " + NetUtils.getLocalHost() + ", service: " + url.getServiceKey());
                 return result;
             }
+
+            // 逐个判断Invoker是否符合表达式中=>之后的过滤条件
             for (Invoker<T> invoker : invokers) {
                 if (matchThen(invoker.getUrl(), url)) {
+
+                    // 记录符合条件的Invoker
                     result.add(invoker);
                 }
             }

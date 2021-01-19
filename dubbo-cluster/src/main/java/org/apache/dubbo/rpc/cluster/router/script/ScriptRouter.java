@@ -48,6 +48,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.TYPE_KEY;
 
 /**
  * ScriptRouter
+ *
+ *  支持 JDK 脚本引擎的所有脚本
  */
 public class ScriptRouter extends AbstractRouter {
     public static final String NAME = "SCRIPT_ROUTER";
@@ -108,10 +110,14 @@ public class ScriptRouter extends AbstractRouter {
     @Override
     public <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException {
         try {
+
+            // 创建Bindings对象作为function函数的入参
             Bindings bindings = createBindings(invokers, invocation);
             if (function == null) {
                 return invokers;
             }
+
+            // 调用function函数，并在getRoutedInvokers()方法中整理得到的Invoker集合
             return getRoutedInvokers(function.eval(bindings));
         } catch (ScriptException e) {
             logger.error("route error, rule has been ignored. rule: " + rule + ", method:" +

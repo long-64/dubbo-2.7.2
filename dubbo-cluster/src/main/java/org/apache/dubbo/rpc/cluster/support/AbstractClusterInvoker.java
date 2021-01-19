@@ -243,6 +243,17 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         return null;
     }
 
+    /**
+     *
+     * Cluster 层的核心流程是这样的：当调用进入 Cluster 的时候，Cluster 会创建一个 AbstractClusterInvoker 对象，在这个 AbstractClusterInvoker 中，
+     *     1、首先会从 Directory 中获取当前 Invoker 集合；
+     *     2、然后按照 Router 集合进行路由，得到符合条件的 Invoker 集合；
+     *     3、接下来按照 LoadBalance 指定的负载均衡策略得到最终要调用的 Invoker 对象。
+     *
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
         checkWhetherDestroyed();
@@ -259,7 +270,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
 
         /**
-         *  {@link #list(Invocation)}  方法会调从注册中心拉取所有 provider 实例信息，并通过路由筛选出可用的 provider 实例
+         *  1、 {@link #list(Invocation)}  方法会调从注册中心拉取所有 provider 实例信息，并通过路由筛选出可用的 provider 实例
          */
         List<Invoker<T>> invokers = list(invocation);
 
