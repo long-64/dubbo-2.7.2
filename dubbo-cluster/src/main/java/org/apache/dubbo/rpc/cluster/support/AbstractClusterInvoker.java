@@ -117,6 +117,12 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @return the invoker which will final to do invoke.
      * @throws RpcException exception
      *
+     * loadbalance： 使用的LoadBalance实现
+     * invocation： `Invocation是此次服务调用的上下文信息`
+     * invokers： `待选择的Invoker集合`
+     * selected： `用来记录负载均衡已经选出来、尝试过的Invoker集合`
+     *
+     *
      *  Dubbo 集群容错，依赖 负载均衡器 （LoadBalance）
      */
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
@@ -142,9 +148,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
 
         /**
-         *
-         *  【 core】 {@link #doSelect(LoadBalance, Invocation, List, List)}
-         *
+         *  【 core 选择逻辑 】 {@link #doSelect(LoadBalance, Invocation, List, List)}
          */
         Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
 
@@ -165,14 +169,20 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
 
         /**
-         * 负载均衡选择器 {@link org.apache.dubbo.rpc.cluster.loadbalance.AbstractLoadBalance#select(List, URL, Invocation)}
+         *  `通过LoadBalance实现选择Invoker对象` {@link org.apache.dubbo.rpc.cluster.loadbalance.AbstractLoadBalance#select(List, URL, Invocation)}
          */
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
+
+        // 如果LoadBalance选出的Invoker对象，已经尝试过请求了或不可用，则需要调用reselect()方法重选
         if ((selected != null && selected.contains(invoker))
                 || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
             try {
+
+                /**
+                 *  执行重选逻辑 {@link #reselect(LoadBalance, Invocation, List, List, boolean)}
+                 */
                 Invoker<T> rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
                 if (rInvoker != null) {
                     invoker = rInvoker;
@@ -181,6 +191,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
                     int index = invokers.indexOf(invoker);
                     try {
                         //Avoid collision
+
+                        // 如果重选的Invoker对象为空，则返回该Invoker的下一个Invoker对象
                         invoker = invokers.get((index + 1) % invokers.size());
                     } catch (Exception e) {
                         logger.warn(e.getMessage() + " may because invokers list dynamic change, ignore.", e);
@@ -209,10 +221,14 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck) throws RpcException {
 
         //Allocating one in advance, this list is certain to be used.
+
+        // 用于记录要重新进行负载均衡的Invoker集合
         List<Invoker<T>> reselectInvokers = new ArrayList<>(
                 invokers.size() > 1 ? (invokers.size() - 1) : invokers.size());
 
         // First, try picking a invoker not in `selected`.
+
+        // 将不在selected集合中的Invoker过滤出来进行负载均衡
         for (Invoker<T> invoker : invokers) {
             if (availablecheck && !invoker.isAvailable()) {
                 continue;
@@ -223,11 +239,14 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             }
         }
 
+        //  reselectInvokers不为空时，才需要通过负载均衡组件进行选择
         if (!reselectInvokers.isEmpty()) {
             return loadbalance.select(reselectInvokers, getUrl(), invocation);
         }
 
         // Just pick an available invoker using loadbalance policy
+
+        // 只能对selected集合中可用的Invoker再次进行负载均衡
         if (selected != null) {
             for (Invoker<T> invoker : selected) {
                 if ((invoker.isAvailable()) // available first
@@ -333,6 +352,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @param invokers   invokers
      * @param invocation invocation
      * @return LoadBalance instance. if not need init, return null.
+     *
+     *  通过 @SPI 加载 LoadBalance
      */
     protected LoadBalance initLoadBalance(List<Invoker<T>> invokers, Invocation invocation) {
         if (CollectionUtils.isNotEmpty(invokers)) {

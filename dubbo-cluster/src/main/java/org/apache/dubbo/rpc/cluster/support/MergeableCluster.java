@@ -21,6 +21,9 @@ import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Directory;
 
+/**
+ * 请求多个 Provider 节点并将得到的结果进行合并
+ */
 public class MergeableCluster implements Cluster {
 
     public static final String NAME = "mergeable";

@@ -33,6 +33,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * if there are multiple invokers and the same weight, then randomly called.
  *
  *  最少活跃调用策略
+ *   : 认为当前活跃请求数越小的 Provider 节点，剩余的处理能力越多，处理请求的效率也就越高，
+ *    那么该 Provider 在单位时间内就可以处理更多的请求，所以我们应该优先将请求分配给该 Provider 节点。
  */
 public class LeastActiveLoadBalance extends AbstractLoadBalance {
 
@@ -100,16 +102,28 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
              */
             if (leastActive == -1 || active < leastActive) {
                 // Reset the active number of the current invoker to the least active number
+
+                // 重新记录最小的活跃请求数
                 leastActive = active;
                 // Reset the number of least active invokers
+
+                // 重新记录活跃请求数最小的Invoker集合个数
                 leastCount = 1;
                 // Put the first least active invoker first in leastIndexes
+
+                // 重新记录Invoker
                 leastIndexes[0] = i;
                 // Reset totalWeight
+
+                // 重新记录总权重值
                 totalWeight = afterWarmup;
                 // Record the weight the first least active invoker
+
+                // 该Invoker作为第一个Invoker，记录其权重值
                 firstWeight = afterWarmup;
                 // Each invoke has the same weight (only one invoker here)
+
+                // 重新记录是否权重值相等
                 sameWeight = true;
                 // If current invoker's active value equals with leaseActive, then accumulating.
 

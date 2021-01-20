@@ -32,10 +32,13 @@ public class ArrayMerger implements Merger<Object[]> {
         }
 
         int i = 0;
+
+        // 查找第一个不为null的结果
         while (i < items.length && items[i] == null) {
             i++;
         }
 
+        // 所有items数组中全部结果都为null，则直接返回空数组
         if (i == items.length) {
             return new Object[0];
         }
@@ -61,6 +64,8 @@ public class ArrayMerger implements Merger<Object[]> {
         Object result = Array.newInstance(type, totalLen);
 
         int index = 0;
+
+        // 遍历全部的结果数组，将items二维数组中的每个元素都加到result中，形成一维数组
         for (Object[] array : items) {
             if (array != null) {
                 for (int j = 0; j < array.length; j++) {

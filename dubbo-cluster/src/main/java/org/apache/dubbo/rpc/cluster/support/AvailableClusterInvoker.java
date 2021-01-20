@@ -37,11 +37,19 @@ public class AvailableClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     @Override
     public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+
+        // 遍历整个Invoker集合
         for (Invoker<T> invoker : invokers) {
+
+            // 检测该Invoker是否可用
             if (invoker.isAvailable()) {
+
+                // 发起请求，调用失败时的异常会直接抛出
                 return invoker.invoke(invocation);
             }
         }
+
+        // 没有找到可用的Invoker，也会抛出异常
         throw new RpcException("No provider available in " + invokers);
     }
 

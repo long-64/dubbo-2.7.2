@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.cluster.Directory;
 /**
  * {@link FailoverClusterInvoker}
  *
+ * 失败自动切换。它是 Dubbo 的默认容错机制，在请求一个 Provider 节点失败的时候，自动切换其他 Provider 节点，默认执行 3 次，适合幂等操作。
  */
 public class FailoverCluster implements Cluster {
 

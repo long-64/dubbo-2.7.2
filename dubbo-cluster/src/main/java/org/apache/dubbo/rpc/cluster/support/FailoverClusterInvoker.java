@@ -61,7 +61,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
 
-        // 获取重试次数（默认重试 2次）
+        // 获取重试次数（默认重试 2次）总执行3次
         int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
         if (len <= 0) {
             len = 1;
@@ -70,6 +70,8 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
         // 使用循环、失败重试
         RpcException le = null; // last exception.
+
+        // 记录已经尝试调用过的Invoker对象
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
         Set<String> providers = new HashSet<String>(len);
         for (int i = 0; i < len; i++) {
@@ -82,7 +84,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 checkWhetherDestroyed();
 
                 /**
-                 * 调用父类获取 invoker 列表 {@link AbstractClusterInvoker#list(Invocation)}
+                 * 调用父类获取 invoker 列表 “从 directory 目录” 中获取 invoker {@link AbstractClusterInvoker#list(Invocation)}
                  */
                 copyInvokers = list(invocation);
                 // check again
@@ -125,6 +127,8 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             } catch (Throwable e) {
                 le = new RpcException(e.getMessage(), e);
             } finally {
+
+                // 记录尝试过的Provider地址，会在上面的警告日志中打印出来
                 providers.add(invoker.getUrl().getAddress());
             }
         }

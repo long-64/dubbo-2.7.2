@@ -47,6 +47,8 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      *   如果一个服务提供者设置的权重大，但是还没有过预热时间，那么重新计算出的权重就比实际的小。
      */
     static int calculateWarmupWeight(int uptime, int warmup, int weight) {
+
+        // 计算权重，随着服务运行时间uptime增大，权重ww的值会慢慢接近配置值weight
         int ww = (int) ((float) uptime / ((float) warmup / (float) weight));
         return ww < 1 ? 1 : (Math.min(ww, weight));
     }
@@ -61,7 +63,10 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         }
 
         /**
-         *  有子类实现
+         *  “由有子类实现”
+         *
+         *   随机轮训 {@link RandomLoadBalance#doSelect(List, URL, Invocation)}
+         *   一致Hash {@link org.apache.dubbo.rpc.cluster.loadbalance.ConsistentHashLoadBalance.ConsistentHashSelector#doSelect(List, URL, Invocation)}
          */
         return doSelect(invokers, url, invocation);
     }
@@ -89,12 +94,15 @@ public abstract class AbstractLoadBalance implements LoadBalance {
             long timestamp = invoker.getUrl().getParameter(REMOTE_TIMESTAMP_KEY, 0L);
             if (timestamp > 0L) {
 
-                // 计算该服务已经发布了多少时间
+                // 计算该服务已经发布了多少时间（默认: 10s）
                 int uptime = (int) (System.currentTimeMillis() - timestamp);
 
                 // 获取用户设置，该服务的预热时间，默认 10分钟
                 int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);
 
+                /*
+                 * 如果Provider运行时间小于预热时间，则 `该Provider` 节点可能还在预热阶段，需要重新计算服务权重(降低其权重)
+                 */
                 if (uptime > 0 && uptime < warmup) {
 
                     /**

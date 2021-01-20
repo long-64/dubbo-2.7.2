@@ -39,22 +39,37 @@ public class MergerFactory {
      * @throws IllegalArgumentException if returnType is null
      */
     public static <T> Merger<T> getMerger(Class<T> returnType) {
+        // returnType为空，直接抛出异常
         if (returnType == null) {
             throw new IllegalArgumentException("returnType is null");
         }
 
         Merger result;
+
+        // returnType为数组类型
         if (returnType.isArray()) {
+
+            // 获取数组中元素的类型
             Class type = returnType.getComponentType();
+
+            // 获取元素类型对应的Merger实现
             result = MERGER_CACHE.get(type);
             if (result == null) {
+
+                /**
+                 *  loadMergers {@link #loadMergers()}
+                 */
                 loadMergers();
                 result = MERGER_CACHE.get(type);
             }
+
+            // 如果Dubbo没有提供元素类型对应的Merger实现，则返回ArrayMerger
             if (result == null && !type.isPrimitive()) {
                 result = ArrayMerger.INSTANCE;
             }
         } else {
+
+            // 如果returnType不是数组类型，则直接从MERGER_CACHE缓存查找对应的Merger实例
             result = MERGER_CACHE.get(returnType);
             if (result == null) {
                 loadMergers();
@@ -65,10 +80,14 @@ public class MergerFactory {
     }
 
     static void loadMergers() {
+
+        // 获取Merger接口的所有扩展名称
         Set<String> names = ExtensionLoader.getExtensionLoader(Merger.class)
                 .getSupportedExtensions();
         for (String name : names) {
             Merger m = ExtensionLoader.getExtensionLoader(Merger.class).getExtension(name);
+
+            // 将 `Merger` 实例与对应 `returnType` 的映射关系记录到MERGER_CACHE集合中
             MERGER_CACHE.putIfAbsent(ReflectUtils.getGenericClass(m.getClass()), m);
         }
     }
