@@ -109,14 +109,18 @@ final public class MockInvoker<T> implements Invoker<T> {
             throw new RpcException(new IllegalAccessException("mock can not be null. url :" + url));
         }
 
-        // 格式化类型
+        // mock值进行处理，去除"force:"、"fail:"前缀等
         mock = normalizeMock(URL.decode(mock));
 
         // 根据不同类型，返回 mock 值
         if (mock.startsWith(RETURN_PREFIX)) {
             mock = mock.substring(RETURN_PREFIX.length()).trim();
             try {
+
+                // 获取响应结果的类型
                 Type[] returnTypes = RpcUtils.getReturnTypes(invocation);
+
+                // 根据结果类型，对mock值中结果值进行转换
                 Object value = parseMockValue(mock, returnTypes);
                 return AsyncRpcResult.newDefaultAsyncResult(value, invocation);
             } catch (Exception ew) {
@@ -177,8 +181,18 @@ final public class MockInvoker<T> implements Invoker<T> {
 
         // 不存在则创建代理、并缓存。
         Class<T> serviceType = (Class<T>) ReflectUtils.forName(url.getServiceInterface());
+
+        /**
+         *  `getMockObject` {@link #getMockObject(String, Class)}
+         */
         T mockObject = (T) getMockObject(mockService, serviceType);
+
+        /**
+         *  创建Invoker对象
+         */
         invoker = proxyFactory.getInvoker(mockObject, serviceType, url);
+
+        // 写入缓存
         if (mocks.size() < 10000) {
             mocks.put(mockService, invoker);
         }

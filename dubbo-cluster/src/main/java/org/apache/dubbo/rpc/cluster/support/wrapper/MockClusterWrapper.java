@@ -25,11 +25,13 @@ import org.apache.dubbo.rpc.cluster.support.FailoverCluster;
 /**
  * mock impl
  *
+ *  MockClusterWrapper 类会对 Cluster 进行包装
  */
 public class MockClusterWrapper implements Cluster {
 
     private Cluster cluster;
 
+    // Wrapper类都会有一个拷贝构造函数
     public MockClusterWrapper(Cluster cluster) {
         this.cluster = cluster;
     }
@@ -39,6 +41,7 @@ public class MockClusterWrapper implements Cluster {
 
         /**
          *  {@link FailoverCluster#join(Directory)}
+         *  用 `{@link MockClusterInvoker `进行包装
          */
         return new MockClusterInvoker<T>(directory,
                 this.cluster.join(directory));

@@ -61,7 +61,9 @@ public interface ProxyFactory {
      * @param invoker
      * @return proxy
      *
-     *  为传入的Invoker对象创建代理对象
+     *  为传入的 `Invoker` 对象创建代理对象
+     *
+     *  1、服务消费使用。（把 Invoker 转换为T ）
      */
     @Adaptive({PROXY_KEY})
     <T> T getProxy(Invoker<T> invoker) throws RpcException;
@@ -84,7 +86,9 @@ public interface ProxyFactory {
      * @param url
      * @return invoker
      *
-     *  将传入的代理对象封装成Invoker对象
+     *  将传入的代理对象封装成 `Invoker` 对象
+     *
+     *  1、服务提供者暴露一个服务。
      *
      */
     @Adaptive({PROXY_KEY})

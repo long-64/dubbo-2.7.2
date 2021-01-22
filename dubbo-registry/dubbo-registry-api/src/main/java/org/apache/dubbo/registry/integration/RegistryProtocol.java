@@ -472,7 +472,7 @@ public class RegistryProtocol implements Protocol {
                 .build();
 
         /**
-         *  获取 Registry {@link org.apache.dubbo.registry.support.AbstractRegistryFactory#getRegistry(URL)}
+         *  获取 Registry (注册中心地址) {@link org.apache.dubbo.registry.support.AbstractRegistryFactory#getRegistry(URL)}
          */
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {

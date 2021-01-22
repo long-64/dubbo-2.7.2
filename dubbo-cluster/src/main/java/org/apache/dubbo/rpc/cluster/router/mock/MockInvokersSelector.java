@@ -32,6 +32,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.MOCK_PROTOCOL;
 /**
  * A specific Router designed to realize mock feature.
  * If a request is configured to use mock, then this router guarantees that only the invokers with protocol MOCK appear in final the invoker list, all other invokers will be excluded.
+ *
+ *      Dubbo Mock 机制相关的 Router 实现
  */
 public class MockInvokersSelector extends AbstractRouter {
 
@@ -50,13 +52,17 @@ public class MockInvokersSelector extends AbstractRouter {
         }
 
         if (invocation.getAttachments() == null) {
+
+            /**
+             * attachments为null，会过滤掉MockInvoker，只返回正常的Invoker对象 {@link #getNormalInvokers(List)}
+             */
             return getNormalInvokers(invokers);
         } else {
             String value = invocation.getAttachments().get(INVOCATION_NEED_MOCK);
             if (value == null) {
 
                 /**
-                 *  {@link #getNormalInvokers(List)}
+                 *  invocation.need.mock为null，会过滤掉MockInvoker，只返回正常的Invoker对象 {@link #getNormalInvokers(List)}
                  */
                 return getNormalInvokers(invokers);
             } else if (Boolean.TRUE.toString().equalsIgnoreCase(value)) {
@@ -67,6 +73,8 @@ public class MockInvokersSelector extends AbstractRouter {
                 return getMockedInvokers(invokers);
             }
         }
+
+        // invocation.need.mock为false，则会将MockInvoker和正常的Invoker一起返回
         return invokers;
     }
 
