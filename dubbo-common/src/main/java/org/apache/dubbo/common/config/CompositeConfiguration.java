@@ -25,6 +25,7 @@ import java.util.List;
 
 /**
  *
+ * 是一个复合的 Configuration 对象，其核心就是将多个 Configuration 对象组合起来，对外表现为一个 Configuration 对象
  */
 public class CompositeConfiguration implements Configuration {
     private Logger logger = LoggerFactory.getLogger(CompositeConfiguration.class);
@@ -64,6 +65,8 @@ public class CompositeConfiguration implements Configuration {
         Configuration firstMatchingConfiguration = null;
         for (Configuration config : configList) {
             try {
+
+                // 得到第一个包含指定Key的Configuration对象
                 if (config.containsKey(key)) {
                     firstMatchingConfiguration = config;
                     break;

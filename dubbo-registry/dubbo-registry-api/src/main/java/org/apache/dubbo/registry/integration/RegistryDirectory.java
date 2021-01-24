@@ -269,6 +269,10 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
         // 获取routers类型的URL，并转成Router对象，添加到RouterChain中
         List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
+
+        /**
+         *  保存路由规则 {@link AbstractDirectory#addRouters(List)}
+         */
         toRouters(routerURLs).ifPresent(this::addRouters);
 
         // providers

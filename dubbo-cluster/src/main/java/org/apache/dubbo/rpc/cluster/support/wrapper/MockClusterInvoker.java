@@ -74,7 +74,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
      * 2、是否出现了异常，如果出现异常则使用配置好的Mock类来实现服务的降级
      *
      *
-     *  no mock(正常情况)
+     *  no mock(正常情况) 远程调用。
      *  force:direct mock(屏蔽)
      *  fail-mock(容错)
      *
@@ -106,7 +106,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
             //force:direct mock
 
             /**
-             *  降级处理  {@link #doMockInvoke(Invocation, RpcException)}
+             *  降级处理 `执行Mock` {@link #doMockInvoke(Invocation, RpcException)}
              */
             result = doMockInvoke(invocation, null);
         } else {
@@ -114,7 +114,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
             try {
 
                 /**
-                 *  调用抽象类 {@link org.apache.dubbo.rpc.cluster.support.AbstractClusterInvoker#invoke(Invocation)}
+                 *  `远程调用` {@link org.apache.dubbo.rpc.cluster.support.AbstractClusterInvoker#invoke(Invocation)}
                  */
                 result = this.invoker.invoke(invocation);
             } catch (RpcException e) {
@@ -127,7 +127,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
                 }
 
                 /**
-                 *  出现异常，则mock 处理 {@link #doMockInvoke(Invocation, RpcException)}
+                 *  出现异常，则 mock 处理 {@link #doMockInvoke(Invocation, RpcException)}
                  */
                 result = doMockInvoke(invocation, e);
             }

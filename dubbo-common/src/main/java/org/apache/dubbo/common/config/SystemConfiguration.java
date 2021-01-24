@@ -34,6 +34,8 @@ public class SystemConfiguration extends AbstractPrefixConfiguration {
 
     @Override
     public Object getInternalProperty(String key) {
+
+        // 读取-D配置参数
         return System.getProperty(key);
     }
 

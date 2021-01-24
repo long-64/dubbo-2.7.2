@@ -129,8 +129,8 @@ public class ActiveLimitFilter extends ListenableFilter {
 
         invocation.setAttachment(ACTIVELIMIT_FILTER_START_TIME, String.valueOf(System.currentTimeMillis()));
 
-        /*
-         * 向下调用
+        /**
+         * 向下调用  `真实的远程调用` {@link org.apache.dubbo.rpc.protocol.dubbo.DubboInvoker#invoke(Invocation)}
          */
         return invoker.invoke(invocation);
     }

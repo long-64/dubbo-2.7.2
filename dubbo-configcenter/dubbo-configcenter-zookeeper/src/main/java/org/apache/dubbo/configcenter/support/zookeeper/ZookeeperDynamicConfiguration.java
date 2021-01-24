@@ -39,24 +39,36 @@ import static org.apache.dubbo.configcenter.Constants.CONFIG_NAMESPACE_KEY;
 public class ZookeeperDynamicConfiguration implements DynamicConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperDynamicConfiguration.class);
 
+    // 用于执行监听器的线程池
     private Executor executor;
     // The final root path would be: /configRootPath/"config"
+
+    // 以 Zookeeper 作为配置中心时，配置也是以 ZNode 形式存储的，rootPath 记录了所有配置节点的根路径。
     private String rootPath;
+
+    // 与 Zookeeper 集群交互的客户端。
     private final ZookeeperClient zkClient;
     private CountDownLatch initializedLatch;
 
+    // 用于监听配置变化的监听器
     private CacheListener cacheListener;
     private URL url;
 
 
     ZookeeperDynamicConfiguration(URL url, ZookeeperTransporter zookeeperTransporter) {
         this.url = url;
+
+        // 根据URL中的config.namespace参数(默认值为dubbo)，确定配置中心ZNode的根路径
         rootPath = "/" + url.getParameter(CONFIG_NAMESPACE_KEY, DEFAULT_GROUP) + "/config";
 
+        // 在cacheListener注册成功之后，会调用cacheListener.countDown()方法
         initializedLatch = new CountDownLatch(1);
         this.cacheListener = new CacheListener(rootPath, initializedLatch);
+
+        // 初始化executor字段，用于执行监听器的逻辑
         this.executor = Executors.newFixedThreadPool(1, new NamedThreadFactory(this.getClass().getSimpleName(), true));
 
+        // 初始化Zookeeper客户端
         zkClient = zookeeperTransporter.connect(url);
         zkClient.addDataListener(rootPath, cacheListener, executor);
         try {

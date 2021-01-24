@@ -51,6 +51,9 @@ public class RpcInvocation implements Invocation, Serializable {
     // 具体参数值
     private Object[] arguments;
 
+    /**
+     * 附件属性值 `隐式传参使用`
+     */
     private Map<String, String> attachments;
 
     // 此次调用关联的 Invoker 对象

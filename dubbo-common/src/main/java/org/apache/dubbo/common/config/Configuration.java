@@ -18,6 +18,8 @@ package org.apache.dubbo.common.config;
 
 /**
  * Configuration interface, to fetch the value for the specified key.
+ *
+ *  配置接口
  */
 public interface Configuration {
     /**
@@ -78,6 +80,7 @@ public interface Configuration {
         return value != null ? value : defaultValue;
     }
 
+    // 方法获取配置值
     Object getInternalProperty(String key);
 
     /**
@@ -92,6 +95,11 @@ public interface Configuration {
     }
 
 
+    /**
+     * 方法将获取到的配置值转换成返回值的类型之后返回
+     *
+     * @return
+     */
     default <T> T convert(Class<T> cls, String key, T defaultValue) {
         // we only process String properties for now
         String value = (String) getProperty(key);

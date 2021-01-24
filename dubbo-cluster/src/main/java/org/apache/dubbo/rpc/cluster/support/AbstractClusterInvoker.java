@@ -280,7 +280,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         // binding attachments into invocation.
 
         /**
-         * 【 Dubbo 参数传递 】
+         * 【 Dubbo 参数传递 】 `隐式传参`
          * 从上下文中获取附件属性并设置到 RPCInvocation 对象中。
          */
         Map<String, String> contextAttachments = RpcContext.getContext().getAttachments();

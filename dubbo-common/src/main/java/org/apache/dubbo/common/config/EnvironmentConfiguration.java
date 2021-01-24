@@ -31,6 +31,8 @@ public class EnvironmentConfiguration extends AbstractPrefixConfiguration {
 
     @Override
     public Object getInternalProperty(String key) {
+
+        // 是从使用环境变量中获取相应的配置
         return System.getenv(key);
     }
 

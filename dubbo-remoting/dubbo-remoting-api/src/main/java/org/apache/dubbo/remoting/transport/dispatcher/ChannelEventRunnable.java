@@ -58,7 +58,8 @@ public class ChannelEventRunnable implements Runnable {
             try {
 
                 /**
-                 *  交互层请求响应处理器  {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler#received(Channel, Object)}
+                 *  1、 `解码` {@link org.apache.dubbo.remoting.transport.DecodeHandler#received(Channel, Object)}
+                 *  2、`交互层请求响应处理器`  {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeHandler#received(Channel, Object)}
                  */
                 handler.received(channel, message);
             } catch (Exception e) {

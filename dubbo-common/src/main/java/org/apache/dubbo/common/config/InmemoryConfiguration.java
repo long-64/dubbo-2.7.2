@@ -21,6 +21,8 @@ import java.util.Map;
 
 /**
  * In-memory configuration
+ *
+ *  内存里，维护 Map<String, String>
  */
 public class InmemoryConfiguration extends AbstractPrefixConfiguration {
 
