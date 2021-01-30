@@ -41,6 +41,8 @@ import java.util.regex.Matcher;
  *    WRAPPER_MAP 用于存储，生成的动态代理。
  */
 public abstract class Wrapper {
+
+    // 存储，生成的动态代理
     private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final String[] OBJECT_METHODS = new String[]{"getClass", "hashCode", "toString", "equals"};

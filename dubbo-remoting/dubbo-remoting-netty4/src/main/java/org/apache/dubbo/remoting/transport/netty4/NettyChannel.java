@@ -106,9 +106,16 @@ final class NettyChannel extends AbstractChannel {
             // 依赖Netty框架的Channel发送数据
             ChannelFuture future = channel.writeAndFlush(message);
 
-            // 等待发送结束，有超时时间
+            /**
+             * 等待发送结束，有超时时间
+             * sent
+             *   true: 等待消息发出，消息发出失败将抛出异常。
+             *   false：不等待消息发出，将消息 放入 IO 队列。即刻返回。
+             */
             if (sent) {
                 timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+
+                // 等待消息发出，若在规定时间没能发出，success 会被置位 false。
                 success = future.await(timeout);
             }
             Throwable cause = future.cause();

@@ -79,9 +79,19 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
              */
             create(path.substring(0, i), false);
         }
+
+        // 根据 ephemeral 的值，创建临时 或 持久节点
         if (ephemeral) {
+
+            /**
+             *  `创建临时节点` {@link org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient#createEphemeral(String)}
+             */
             createEphemeral(path);
         } else {
+
+            /**
+             *  `创建持久节点` {@link org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient#createPersistent(String)}
+             */
             createPersistent(path);
         }
     }

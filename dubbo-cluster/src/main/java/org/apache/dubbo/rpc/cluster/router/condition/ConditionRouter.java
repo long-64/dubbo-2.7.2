@@ -89,9 +89,15 @@ public class ConditionRouter extends AbstractRouter {
 
             // 按照"=>"字符串进行分割，得到whenRule和thenRule两部分
             int i = rule.indexOf("=>");
+
+            // 分别获取服务消费者 和 提供者 匹配规则。
             String whenRule = i < 0 ? null : rule.substring(0, i).trim();
             String thenRule = i < 0 ? rule.trim() : rule.substring(i + 2).trim();
+
+            // 解析 服务消费者 匹配规则
             Map<String, MatchPair> when = StringUtils.isBlank(whenRule) || "true".equals(whenRule) ? new HashMap<String, MatchPair>() : parseRule(whenRule);
+
+            // 解析服务提供者 匹配规则
             Map<String, MatchPair> then = StringUtils.isBlank(thenRule) || "false".equals(thenRule) ? null : parseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not.
             this.whenCondition = when;
@@ -103,6 +109,8 @@ public class ConditionRouter extends AbstractRouter {
 
     private static Map<String, MatchPair> parseRule(String rule)
             throws ParseException {
+
+        // 定义条件映射集合
         Map<String, MatchPair> condition = new HashMap<String, MatchPair>();
         if (StringUtils.isBlank(rule)) {
             return condition;

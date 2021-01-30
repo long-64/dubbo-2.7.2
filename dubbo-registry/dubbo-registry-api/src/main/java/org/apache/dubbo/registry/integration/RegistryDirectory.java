@@ -332,7 +332,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             routerChain.setInvokers(this.invokers);
 
             /**
-             * 关闭所有 Invoker {@link #destroyAllInvokers()}
+             *  销毁所有 Invoker {@link #destroyAllInvokers()}
              */
             destroyAllInvokers(); // Close all invokers
         } else {
@@ -487,7 +487,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 boolean accept = false;
                 String[] acceptProtocols = queryProtocols.split(",");
 
-                // 遍历所有Consumer端支持的协议
+                // 检测服务提供者协议是否被服务消费者所支持
                 for (String acceptProtocol : acceptProtocols) {
                     if (providerUrl.getProtocol().equals(acceptProtocol)) {
                         accept = true;
@@ -503,6 +503,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 // 跳过empty协议的URL
                 continue;
             }
+
+            // 通过 SPI 检测服务端协议是否别消费端 支持。
             if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
                 logger.error(new IllegalStateException("Unsupported protocol " + providerUrl.getProtocol() +
                         " in notified url: " + providerUrl + " from registry " + getUrl().getAddress() +
@@ -510,10 +512,14 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
                 continue;
             }
+
+            // 合并 URL。
             URL url = mergeUrl(providerUrl);
 
             String key = url.toFullString(); // The parameter urls are sorted
             if (keys.contains(key)) { // Repeated url
+
+                // 忽略重复 URL
                 continue;
             }
             keys.add(key);
@@ -541,9 +547,13 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                     logger.error("Failed to refer invoker for interface:" + serviceType + ",url:(" + url + ")" + t.getMessage(), t);
                 }
                 if (invoker != null) { // Put new invoker in cache
+
+                    // 缓存 Invoker 实例
                     newUrlInvokerMap.put(key, invoker);
                 }
             } else {
+
+                // 缓存命中，将 Invoker 存储到 newUrlInvokerMap 中。
                 newUrlInvokerMap.put(key, invoker);
             }
         }

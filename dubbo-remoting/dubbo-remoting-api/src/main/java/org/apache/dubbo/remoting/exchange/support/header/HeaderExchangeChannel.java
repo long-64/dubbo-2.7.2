@@ -130,7 +130,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         try {
 
             /**
-             * 发送请求到远端，并返回 Future。
+             * 发送请求到远端，并返回 Future。{@link org.apache.dubbo.remoting.transport.AbstractPeer#send(Object)}
              */
             channel.send(req);
         } catch (RemotingException e) {

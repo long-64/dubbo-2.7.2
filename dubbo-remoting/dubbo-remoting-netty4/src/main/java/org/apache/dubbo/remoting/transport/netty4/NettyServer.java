@@ -69,7 +69,7 @@ public class NettyServer extends AbstractServer implements Server {
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
 
         /**
-         *  加载具体的线程模型 {@link ChannelHandlers#wrap(ChannelHandler, URL)}
+         *  加载具体的线程模型 {@link ChannelHandlers#wap(ChannelHandler, URL)}
          */
         super(url, ChannelHandlers.wrap(handler, ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME)));
     }

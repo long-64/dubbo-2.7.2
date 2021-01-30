@@ -615,6 +615,7 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
+        // 从缓存中获取自适应拓展
         Object instance = cachedAdaptiveInstance.get();
         if (instance == null) {
             if (createAdaptiveInstanceError == null) {
@@ -1191,6 +1192,10 @@ public class ExtensionLoader<T> {
 
         /**
          *  获取该扩展接口的所有实现类的Class 对象 {@link #getExtensionClasses()}
+         *
+         *  存放
+         *      1、cachedAdaptiveClass
+         *      2、cacheWrapperClass
          */
         getExtensionClasses();
 

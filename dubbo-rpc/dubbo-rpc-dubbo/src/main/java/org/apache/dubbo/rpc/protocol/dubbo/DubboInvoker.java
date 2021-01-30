@@ -89,13 +89,15 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         // 设置远程调用 Client
         ExchangeClient currentClient;
         if (clients.length == 1) {
+
+            // 从 clients 数组中获取 ExchangeClient
             currentClient = clients[0];
         } else {
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
         try {
 
-            // oneway 就是不需要响应结果的请求。
+            // oneway 就是不需要响应结果的请求。(true: 表示 “单向” 通信 )
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
 
             // // 根据调用的方法名称和配置计算此次调用的超时时间
@@ -112,7 +114,9 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 RpcContext.getContext().setFuture(null);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             } else {
-                // 需要关注返回值的请求
+                /*
+                 * 需要关注返回值的请求
+                 */
 
                 // 异步 RpcResult
                 AsyncRpcResult asyncRpcResult = new AsyncRpcResult(inv);

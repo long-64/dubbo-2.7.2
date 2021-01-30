@@ -49,7 +49,11 @@ public class HeaderExchanger implements Exchanger {
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
 
         /**
-         *  Server {@link Transporters#bind(URL, ChannelHandler...)}
+         *  创建 HeaderExchangeServer 实例，该方法包含多步骤
+         *  1、{@link HeaderExchangeHandler#HeaderExchangeHandler(ExchangeHandler)}
+         *  2、 `解码` {@link DecodeHandler#DecodeHandler(ChannelHandler)}
+         *  3、Server {@link Transporters#bind(URL, ChannelHandler...)}
+         *
          *
          *   `HeaderExchangeServer`  {@link org.apache.dubbo.remoting.exchange.support.header.HeaderExchangeServer#HeaderExchangeServer(Server)}
          */

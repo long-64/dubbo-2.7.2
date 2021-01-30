@@ -55,6 +55,8 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
          *
          *  把服务实现类转换为 Wrapper {@link Wrapper#getWrapper(Class)}
          *   减少反射的调用。
+         *
+         *    `Wrapper` 用于 “包裹” 目标类。Wrapper 是一个抽象类，仅可通过 getWrapper 方法创建子类
          */
         final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
 

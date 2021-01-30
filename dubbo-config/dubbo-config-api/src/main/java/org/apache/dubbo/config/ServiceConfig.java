@@ -532,6 +532,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
+
+        // 如果协议名为空，或空串，则将协议名变量设置为 dubbo
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
@@ -791,6 +793,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 .build();
 
         /**
+         *
+         *  1、获取 Invoker。
+         *   【 getInvoker 】 {@link org.apache.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper#getInvoker(Object, Class, URL)}
          *
          *  Protocol extension = (Protocol)ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("injvm")
          *  返回的
