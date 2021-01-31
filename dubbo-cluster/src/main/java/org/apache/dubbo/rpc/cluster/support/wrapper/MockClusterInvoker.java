@@ -186,7 +186,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
      * @param invocation
      * @return
      */
-    private List<Invoker<T>> selectMockInvoker(Invocation invocation) {
+    private List<Invoker<T>>  selectMockInvoker(Invocation invocation) {
         List<Invoker<T>> invokers = null;
         //TODO generic invoker？
         if (invocation instanceof RpcInvocation) {

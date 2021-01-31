@@ -61,6 +61,14 @@ public class DubboCodec extends ExchangeCodec {
     public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final Logger log = LoggerFactory.getLogger(DubboCodec.class);
 
+    /**
+     * 重写 父类 `decodeBody` 方法 （父类: ExchangeCodec）
+     * @param channel
+     * @param is
+     * @param header
+     * @return
+     * @throws IOException
+     */
     @Override
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
@@ -189,6 +197,8 @@ public class DubboCodec extends ExchangeCodec {
         Object[] args = inv.getArguments();
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
+
+                // 对运行时的参数进行序列化
                 out.writeObject(encodeInvocationArgument(channel, inv, i));
             }
         }

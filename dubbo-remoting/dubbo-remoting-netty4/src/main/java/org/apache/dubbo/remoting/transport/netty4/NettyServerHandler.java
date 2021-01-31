@@ -99,7 +99,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         try {
 
             /**
-             *  【 默认线程模型 】 {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#received(Channel, Object)}
+             *   {@link org.apache.dubbo.remoting.transport.MultiMessageHandler#received(Channel, Object)}
              */
             handler.received(channel, msg);
         } finally {

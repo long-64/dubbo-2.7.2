@@ -23,6 +23,7 @@ import org.apache.dubbo.remoting.zookeeper.ChildListener;
 import org.apache.dubbo.remoting.zookeeper.DataListener;
 import org.apache.dubbo.remoting.zookeeper.StateListener;
 import org.apache.dubbo.remoting.zookeeper.ZookeeperClient;
+import org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient;
 
 import java.util.List;
 import java.util.Set;
@@ -122,6 +123,10 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
             listeners.putIfAbsent(listener, createTargetChildListener(path, listener));
             targetListener = listeners.get(listener);
         }
+
+        /**
+         * [core] {@link org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient#addTargetChildListener(String, CuratorZookeeperClient.CuratorWatcherImpl)}
+         */
         return addTargetChildListener(path, targetListener);
     }
 

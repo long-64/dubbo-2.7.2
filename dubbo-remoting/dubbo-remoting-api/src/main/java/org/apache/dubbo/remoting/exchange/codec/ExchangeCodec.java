@@ -111,8 +111,14 @@ public class ExchangeCodec extends TelnetCodec {
 
         // 将 Dubbo 协议头获取到数组 Handler.
         int readable = buffer.readableBytes();
+
+        // 创建消息头数据
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
         buffer.readBytes(header);
+
+        /**
+         *  核心解码工作 {@link #decode(Channel, ChannelBuffer, int, byte[])}
+         */
         return decode(channel, buffer, readable, header);
     }
 
@@ -135,6 +141,10 @@ public class ExchangeCodec extends TelnetCodec {
                     break;
                 }
             }
+
+            /**
+             * decode {@link TelnetCodec#decode(Channel, ChannelBuffer, int, byte[])}
+             */
             return super.decode(channel, buffer, readable, header);
         }
         // check length.
@@ -178,6 +188,15 @@ public class ExchangeCodec extends TelnetCodec {
         }
     }
 
+    /**
+     *  解析 Body 数据
+     *
+     * @param channel
+     * @param is
+     * @param header
+     * @return
+     * @throws IOException
+     */
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
 
         // 解析请求类型，和消费序列化的类型。
@@ -233,8 +252,12 @@ public class ExchangeCodec extends TelnetCodec {
             // decode request.
             Request req = new Request(id);
             req.setVersion(Version.getProtocolVersion());
+
+            // 通过逻辑与运算，得到通信方式，并设置到 Request 对象中。
             req.setTwoWay((flag & FLAG_TWOWAY) != 0);
             if ((flag & FLAG_EVENT) != 0) {
+
+                // 设置心跳事件到 request 对象中。
                 req.setEvent(true);
             }
             try {
@@ -243,6 +266,10 @@ public class ExchangeCodec extends TelnetCodec {
                 if (req.isHeartbeat()) {
                     data = decodeHeartbeatData(channel, in);
                 } else if (req.isEvent()) {
+
+                    /**
+                     * 对事件数据机进行解码 {@link #decodeEventData(Channel, ObjectInput)}
+                     */
                     data = decodeEventData(channel, in);
                 } else {
                     data = decodeRequestData(channel, in);
@@ -300,9 +327,12 @@ public class ExchangeCodec extends TelnetCodec {
         // 设置头类型与序列化类型、标记到协议头 ( contentTypeId 序列化的ID）
         header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
 
+        // 设置通信方式（ 单向/ 双向）
         if (req.isTwoWay()) {
             header[2] |= FLAG_TWOWAY;
         }
+
+        // 设置事件标识
         if (req.isEvent()) {
             header[2] |= FLAG_EVENT;
         }

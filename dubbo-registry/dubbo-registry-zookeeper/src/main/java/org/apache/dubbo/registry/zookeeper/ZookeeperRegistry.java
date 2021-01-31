@@ -225,7 +225,9 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     // 创建节点
                     zkClient.create(path, false);
 
-                    //增加回调
+                    /**
+                     * 增加回调 {@link org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperClient#addChildListener(String, ChildListener)}
+                     */
                     List<String> children = zkClient.addChildListener(path, zkListener);
                     if (children != null) {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
