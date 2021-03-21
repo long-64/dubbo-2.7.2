@@ -78,12 +78,19 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     public void destroy() {
     }
 
+
+    /**
+     * 真正执行有远程调用。
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         try {
 
             /**
-             * 具体执行本地服务调用  {@link #doInvoke(Object, String, Class[], Object[])}  `由子类实现`
+             * 具体执行本地服务调用  {@link #doInvoke(Object, String, Class[], Object[])}  `由子类实现` （执行生成的代理类）
              *
              *  默认: {@link org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory#getInvoker(Object, Class, URL)}
              *  jdk  {@link org.apache.dubbo.rpc.proxy.jdk.JdkProxyFactory}
