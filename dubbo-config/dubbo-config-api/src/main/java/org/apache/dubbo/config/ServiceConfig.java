@@ -492,7 +492,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         /**
          *
-         *  Dubbo是基于URL来驱动的
+         *  Dubbo 是基于URL来驱动的
          *
          *  这里多个 URL, 是因为 Dubbo 支持多个 registry.（一个服务可以被注册到多个服务注册中心）
          *
@@ -525,10 +525,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     /**
      *  发布指定协议的服务。
      *
-     *  内部把参数封装为 URL。
      *
-     * @param protocolConfig
-     * @param registryURLs
+     * @param protocolConfig 协议配置
+     * @param registryURLs 内部把参数封装为 URL
      */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
@@ -611,13 +610,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } // end of methods for
         }
 
-        // 如果为泛型调用，设置泛型类型。
+        // 2、如果为泛型调用，设置泛型类型。
         if (ProtocolUtils.isGeneric(generic)) {
             map.put(GENERIC_KEY, generic);
             map.put(METHODS_KEY, ANY_VALUE);
         } else {
 
-            // 正常调用设置拼接 URL 参数。
+            // 3、正常调用设置拼接 URL 参数。
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
@@ -643,7 +642,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
         // export service
 
-        // 拼接 URL 对象。
+        // 4、拼接 URL 对象。
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
 
@@ -663,6 +662,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         /*****************************
          *
+         * 5、导出服务，本地服务，远程服务。
+         *
          *  如果 scope = none，则什么都不做
          *  scope != remote，导出到本地
          *  scope != local，导出到远程
@@ -672,16 +673,16 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         String scope = url.getParameter(SCOPE_KEY);
         // don't export when none is configured
 
-        // 如果 scope 为 SCOPE_NODE 不暴露服务。
+        // 5.1、如果 scope 为 SCOPE_NODE 不暴露服务。
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
 
-            //配置不是remote的情况下做本地暴露 (配置为remote，则表示只暴露远程服务)
+            // 5.2、配置不是remote的情况下做本地暴露 (配置为remote，则表示只暴露远程服务)
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
 
                 /**
-                 * injvm 发布到本地 {@link #exportLocal(URL)}
+                 *  【injvm】 发布到本地 {@link #exportLocal(URL)}
                  */
                 exportLocal(url);
             }
@@ -735,7 +736,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
                         /**
                          * 跟下面 `protocol.export()` 逻辑一致。
-                         *  【 QosProtocolWrapper 】 {@link org.apache.dubbo.qos.protocol.QosProtocolWrapper#export(Invoker)}
+                         *  【 RegistryProtocol 】 {@link org.apache.dubbo.registry.integration.RegistryProtocol#export(Invoker)}
                          */
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);

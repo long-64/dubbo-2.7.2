@@ -401,7 +401,7 @@ public class DubboProtocol extends AbstractProtocol {
     }
 
     /**
-     * 启动 Netty 服务。
+     * 启动 Netty 服务。(同一个机器,的不同服务, 只会开启一个 Netty-Server
      * @param url
      */
     private void openServer(URL url) {

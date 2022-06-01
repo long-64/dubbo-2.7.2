@@ -148,7 +148,7 @@ public class ProtocolFilterWrapper implements Protocol {
         if (REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
 
             /**
-             *  【 registry 协议 】 {@link ProtocolListenerWrapper#export(Invoker)}
+             *  【 registry 协议 】 {@link org.apache.dubbo.registry.integration.RegistryProtocol#export(Invoker)}
              */
             return protocol.export(invoker);
         }

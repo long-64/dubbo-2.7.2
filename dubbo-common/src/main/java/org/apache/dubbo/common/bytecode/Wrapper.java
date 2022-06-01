@@ -121,7 +121,9 @@ public abstract class Wrapper {
             return OBJECT_WRAPPER;
         }
 
-        // 是否正常，动态代理类
+        /**
+         * 是否正常，动态代理类 {@link WRAPPER_MAP 生成代理类-缓存
+         */
         Wrapper ret = WRAPPER_MAP.get(c);
         if (ret == null) {
 

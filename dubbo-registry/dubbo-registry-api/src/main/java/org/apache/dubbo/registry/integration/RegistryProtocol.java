@@ -320,7 +320,9 @@ public class RegistryProtocol implements Protocol {
             /**
              * {@link org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper#export(Invoker)}
              *
-             * 将invoker转换为exporter并启动netty服务 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
+             *  最终：  将invoker转换为exporter并启动netty服务 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#export(Invoker)}
+             *
+             *   第一步调用 {@link org.apache.dubbo.qos.protocol.QosProtocolWrapper#export(Invoker)}
              */
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });

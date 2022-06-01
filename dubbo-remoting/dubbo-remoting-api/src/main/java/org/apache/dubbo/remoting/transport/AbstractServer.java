@@ -77,7 +77,9 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         try {
 
             /**
-             *  模板方法，由子类实现。{@link org.apache.dubbo.remoting.transport.netty4.NettyServer#doOpen()}
+             *  模板方法，由子类实现。
+             *   Netty-4 {@link org.apache.dubbo.remoting.transport.netty4.NettyServer#doOpen()}
+             *   Netty {@link org.apache.dubbo.remoting.transport.netty.NettyServer#doOpen()}
              */
             doOpen();
             if (logger.isInfoEnabled()) {

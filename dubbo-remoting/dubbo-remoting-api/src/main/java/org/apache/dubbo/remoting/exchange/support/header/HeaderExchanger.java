@@ -50,6 +50,7 @@ public class HeaderExchanger implements Exchanger {
 
         /**
          *  创建 HeaderExchangeServer 实例，该方法包含多步骤
+         *
          *  1、{@link HeaderExchangeHandler#HeaderExchangeHandler(ExchangeHandler)}
          *  2、 `解码` {@link DecodeHandler#DecodeHandler(ChannelHandler)}
          *  3、Server {@link Transporters#bind(URL, ChannelHandler...)}
