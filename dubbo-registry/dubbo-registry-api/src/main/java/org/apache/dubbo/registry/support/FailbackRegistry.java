@@ -344,6 +344,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
             List<URL> urls = getCacheUrls(url);
             if (CollectionUtils.isNotEmpty(urls)) {
+                /**
+                 *  notify 通知 {@link #notify(URL, NotifyListener, List)}
+                 */
                 notify(url, listener, urls);
                 logger.error("Failed to subscribe " + url + ", Using cached list: " + urls + " from cache file: " + getUrl().getParameter(FILE_KEY, System.getProperty("user.home") + "/dubbo-registry-" + url.getHost() + ".cache") + ", cause: " + t.getMessage(), t);
             } else {
@@ -403,6 +406,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             throw new IllegalArgumentException("notify listener == null");
         }
         try {
+
+            /**
+             *  【 core 】{@link #doNotify(URL, NotifyListener, List)}
+             */
             doNotify(url, listener, urls);
         } catch (Exception t) {
             // Record a failed registration request to a failed list, retry regularly

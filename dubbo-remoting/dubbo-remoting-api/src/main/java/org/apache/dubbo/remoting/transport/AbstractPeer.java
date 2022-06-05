@@ -130,7 +130,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         }
 
         /**
-         * {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#connected(Channel)}
+         *  处理心跳 {@link org.apache.dubbo.remoting.exchange.support.header.HeartbeatHandler#connected(Channel)}
          */
         handler.connected(ch);
     }

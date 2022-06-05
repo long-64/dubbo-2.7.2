@@ -47,6 +47,10 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
     public void connected(Channel channel) throws RemotingException {
         setReadTimestamp(channel);
         setWriteTimestamp(channel);
+
+        /**
+         *  {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#connected(Channel)}
+         */
         handler.connected(channel);
     }
 

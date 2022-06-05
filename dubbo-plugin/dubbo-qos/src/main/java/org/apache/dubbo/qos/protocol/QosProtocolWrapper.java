@@ -62,7 +62,7 @@ public class QosProtocolWrapper implements Protocol {
         }
 
         /**
-         *  {@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper#export(Invoker)}
+         *  [ProtocolListenerWrapper]  {@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper#export(Invoker)}
          */
         return protocol.export(invoker);
     }
@@ -73,6 +73,10 @@ public class QosProtocolWrapper implements Protocol {
             startQosServer(url);
             return protocol.refer(type, url);
         }
+
+        /**
+         *  [ProtocolListenerWrapper] {@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper#refer(Class, URL)}
+         */
         return protocol.refer(type, url);
     }
 

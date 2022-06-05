@@ -32,6 +32,8 @@ import java.util.concurrent.RejectedExecutionException;
 
 /**
  * All 线程模型，（全部派发给业务线程处理。）
+ *
+ *  这些消息包括请求事件、响应事件、连接事件、断开事件、心跳事件, AllChannelHandler 把 I/O线程接收到的所有消息包装为ChannelEventRunnable任务并都投递到了线程池里。
  */
 public class AllChannelHandler extends WrappedChannelHandler {
 

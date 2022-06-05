@@ -147,7 +147,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         try {
 
             /**
-             * 最终实现 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler} `connected()`
+             * 最终实现 {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler#connected(Channel)}
              */
             handler.connected(exchangeChannel);
         } finally {

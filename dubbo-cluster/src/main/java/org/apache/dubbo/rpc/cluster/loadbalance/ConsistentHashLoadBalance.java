@@ -63,10 +63,10 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
         // 将ServiceKey和方法拼接起来，构成一个key
         String key = invokers.get(0).getUrl().getServiceKey() + "." + methodName;
 
-        // 注意：这是为了在invokers列表发生变化时都会重新生成ConsistentHashSelector对象
+        // 注意：这是为了在invokers列表发生变化时都会重新生成 ConsistentHashSelector 对象
         int identityHashCode = System.identityHashCode(invokers);
 
-        // 根据key获取对应的ConsistentHashSelector对象
+        // 根据key获取对应的 ConsistentHashSelector 对象
         ConsistentHashSelector<T> selector = (ConsistentHashSelector<T>) selectors.get(key);
         if (selector == null || selector.identityHashCode != identityHashCode) {
 
